@@ -21,9 +21,11 @@
  *   { "title", "body" (html), "excerpt", "author", "status", "tags": [],
  *     "metaDescription", "slug" }
  *
- * upload-image returns { imageUrl, path } — `path` is the root-relative form of
- * the URL. Insert `path` into body HTML (portable across localhost/production);
- * use `imageUrl` for reporting. For Shopify both are the absolute CDN URL.
+ * upload-image returns { imageUrl, path } — insert `path` into body HTML
+ * verbatim, use `imageUrl` for reporting. The server provides `path` when it
+ * can: root-relative on Postgres-backed articles-api sites, an absolute CDN
+ * URL on object-storage-backed sites and Shopify. Older articles-api servers
+ * return only imageUrl; `path` falls back to its pathname.
  */
 import { readFile } from "node:fs/promises";
 import path from "node:path";
@@ -121,8 +123,10 @@ class ArticlesApi {
       }),
       `upload-image ${id}`,
     );
-    const { imageUrl } = await res.json();
-    return { imageUrl, path: new URL(imageUrl).pathname };
+    const body = await res.json();
+    // Server-provided path wins (absolute CDN URL on object-storage sites);
+    // deriving from imageUrl is the fallback for older articles-api servers.
+    return { imageUrl: body.imageUrl, path: body.path ?? new URL(body.imageUrl).pathname };
   }
 }
 

@@ -14,9 +14,12 @@ description: >-
 You write exactly **ONE article per invocation**, walking these phases in order:
 
 ```
-analyze → select topic → research → outline (GATE 1) → write
-        → images (GATE 2: spend) → publish draft → review (GATE 3) → optional publish flip
+analyze → select topic → research → outline → write
+        → images → publish draft → report
 ```
+
+This flow is fully autonomous — it runs unattended (e.g. scheduled off-hours),
+so it must complete without ever asking the user anything.
 
 Per-phase craft lives in three sibling skills — load them as you reach each phase:
 - **seo-research** — topic selection, SERP analysis, competitor deep-dives, LSI keywords
@@ -71,27 +74,29 @@ own terminal (Keychain service `seoblog`). See Setup below.
    find the angle. If the site has a `product`, WebFetch the product URL too.
    If research reveals the topic is too thin for a good article, say so and pick
    another — quality over quantity.
-4. **OUTLINE — GATE 1.** Present: chosen topic + why (including the dedup
-   check result), title (<60 chars, primary keyword), H2/H3 outline, target
-   word count, planned image spots, product angle if any. AskUserQuestion:
-   approve / adjust / different topic. Do not write until approved.
+4. **OUTLINE — self-check.** Draft the outline: chosen topic + why (including
+   the dedup check result), title (<60 chars, primary keyword), H2/H3 outline,
+   target word count, planned image spots, product angle if any. Validate it
+   yourself — dedup passed, title fits, H2/H3s cover the search intent, word
+   count matches the site's articleLength — fix what fails, then proceed
+   immediately. Never ask the user to approve it.
 5. **WRITE** — per seo-writing. Full HTML body with `<!-- IMAGE: … -->`
    placeholders (no `<img>` yet), meta description, excerpt, 3–7 tags.
-6. **IMAGES — GATE 2 (spend).** Compute the image count (see blog-publish) and
-   show the estimate: "N images × $0.15 = $X via fal.ai — proceed?" **Never
-   generate before an explicit yes.** If FAL_API_KEY is unset or the user
-   declines, publish without images and strip the placeholders.
+6. **IMAGES.** Compute the image count from the blog-publish table, note the
+   cost ("N images × $0.15 = $X via fal.ai") in your progress output for the
+   record, and generate immediately — no approval step. If FAL_API_KEY is
+   unset, publish without images and strip the placeholders.
 7. **PUBLISH DRAFT** — per blog-publish: create with `status:"draft"` (ALWAYS
    draft, never publish directly), generate + upload images, swap placeholders,
    update the state file (record article, mark keywords completed, set lastRunAt).
-8. **REVIEW — GATE 3.** Report the draft id/slug and the live-URL-to-be
-   (`<baseUrl>/blog/<slug>`). Previewing drafts is the site's job — point the
+8. **REPORT.** The article stays a **draft** — that is the terminal state.
+   Report: draft id, slug, live-URL-to-be (`<baseUrl>/blog/<slug>`), image
+   count and cost spent. Previewing drafts is the site's job — point the
    user at whatever their site provides (e.g. plugmyplugin.com shows drafts at
    the live URL to signed-in admins); never construct a preview-key URL.
-   AskUserQuestion: publish
-   now / leave as draft / revise. "Leave as draft" is a fine terminal state —
-   /seoblog:publish can flip it later. Publish flip = `cms.mjs update --id N`
-   with `{"status":"published"}`.
+   Note that /seoblog:publish flips it live later. Only flip to published in
+   this same run (`cms.mjs update --id N` with `{"status":"published"}`) if the
+   user's original prompt explicitly asked to publish — never ask.
 
 ## Critical rules
 
@@ -99,7 +104,10 @@ own terminal (Keychain service `seoblog`). See Setup below.
 2. **ALWAYS RECORD** — update the state file after creating an article.
 3. **NEVER PLAGIARIZE** — research is for understanding what exists; write original content.
 4. **ONE ARTICLE PER RUN.**
-5. **NEVER SPEND before Gate 2's explicit yes.**
+5. **NEVER ASK QUESTIONS during a write run** — no AskUserQuestion, no
+   free-text confirmations ("proceed?", "is this OK?"). Runs are often
+   scheduled and unattended; a question means the run fails. Compute the
+   image count from the table and proceed; end at draft and report.
 6. Respect the site's `directions` field as standing house rules on every run.
 
 ## Setup interview (for /seoblog:setup)

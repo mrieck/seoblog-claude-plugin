@@ -30,8 +30,8 @@ publishing with images enabled:
 | medium | 1 | 1 | 1 |
 | long | 1 | 2 | 1 |
 
-Cost = images × $0.15 (fal-ai/nano-banana-pro). Quote this at Gate 2 and get an
-explicit yes before the first gen-image call.
+Cost = images × $0.15 (fal-ai/nano-banana-pro). Note this estimate in your
+progress output for the record, then proceed — no approval step.
 
 ## Publish-draft sequence
 
@@ -39,7 +39,7 @@ explicit yes before the first gen-image call.
    status: "draft", tags, metaDescription}) to a temp dir, then
    `cms.mjs create --site <id> --file article.json` → `{id, slug}`.
    `status` is ALWAYS "draft" here.
-2. **Generate images** (after Gate 2 approval) — for each planned image run
+2. **Generate images** — for each planned image run
    `gen-image.mjs` with a crafted prompt (see seo-writing's image-prompt craft):
    - hero: `--purpose hero` (16:9)
    - inline: `--purpose inline` (16:9 or 4:3, per placement)
@@ -50,9 +50,9 @@ explicit yes before the first gen-image call.
    → `{imageUrl, path}`. Alt text is required for hero and inline.
 4. **Swap placeholders** — build the patched body: replace each
    `<!-- IMAGE: … -->` with `<img src="<path>" alt="…" />`, matching each image
-   to the most relevant placeholder. Use the **root-relative `path`** (portable
-   across localhost/production), not the absolute imageUrl — except Shopify,
-   where `path` is already the CDN URL. The hero and OG images are NOT inserted
+   to the most relevant placeholder. Use the returned **`path` verbatim** — the
+   server decides its form: root-relative on Postgres-backed sites, an absolute
+   CDN URL on object-storage-backed sites and Shopify. The hero and OG images are NOT inserted
    into the body — the site renders them from their purpose slots. Then
    `cms.mjs update --site <id> --id <articleId> --file patch.json` with
    `{"body": "…"}`. If images were skipped, strip the placeholder comments the
@@ -62,15 +62,18 @@ explicit yes before the first gen-image call.
    createdAt}), mark the run's keywords "completed" with the articleId, set
    lastRunAt.
 
-## Publish flip (Gate 3 / /seoblog:publish)
+## Publish flip (/seoblog:publish)
+
+The write flow ends at draft + report and never asks about publishing; the
+flip only happens via /seoblog:publish or when the user's prompt explicitly
+said to publish.
 
 - List drafts: `cms.mjs list --site <id> --status draft`.
 - Show the user title and live-URL-to-be (`<baseUrl>/blog/<slug>`). Previewing
   drafts is the site's job, not this plugin's — point the user at whatever
   their site provides (e.g. plugmyplugin.com shows drafts at the live URL to
   signed-in admins; WordPress/Shopify have their own draft previews). Never
-  construct a preview URL or put the API key in a URL. Get explicit
-  confirmation.
+  construct a preview URL or put the API key in a URL.
 - Flip: `cms.mjs update --site <id> --id <articleId> --file patch.json` with
   `{"status": "published"}`.
 - Verify with `cms.mjs get --id <articleId>` (articles-api only) and print the

@@ -1,0 +1,425 @@
+/**
+ * CMS client — every remote call the plugin makes to a blog goes through here.
+ * One CLI, three adapters (selected by the site's cmsType):
+ *
+ *   articles-api  the generic Articles API (X-API-Key; implemented by
+ *                 plugmyplugin.com and the Cue Up WordPress plugin)
+ *   wordpress     alias of articles-api (requires the Cue Up WP plugin, NOT the
+ *                 vanilla WP REST API)
+ *   shopify       native Shopify Admin API 2024-01 (Custom App token with
+ *                 write_content; blog resolved from shopifyBlogId or first blog)
+ *
+ * Commands (all print one JSON line to stdout, progress to stderr):
+ *   node scripts/cms.mjs list         --site <id> [--limit N] [--offset N] [--status draft|published]
+ *   node scripts/cms.mjs create       --site <id> --file article.json
+ *   node scripts/cms.mjs update       --site <id> --id N --file patch.json
+ *   node scripts/cms.mjs get          --site <id> --id N            (articles-api only)
+ *   node scripts/cms.mjs upload-image --site <id> --id N --file img.jpg
+ *                                     [--purpose hero|inline|og] [--alt "..."]
+ *
+ * article.json / patch.json shape (create requires title+body):
+ *   { "title", "body" (html), "excerpt", "author", "status", "tags": [],
+ *     "metaDescription", "slug" }
+ *
+ * upload-image returns { imageUrl, path } — `path` is the root-relative form of
+ * the URL. Insert `path` into body HTML (portable across localhost/production);
+ * use `imageUrl` for reporting. For Shopify both are the absolute CDN URL.
+ */
+import { readFile } from "node:fs/promises";
+import path from "node:path";
+import { parseArgs, requireArg, fail } from "./lib/args.mjs";
+import { getSite } from "./lib/config.mjs";
+import { siteApiKey } from "./lib/env.mjs";
+import { main, info, report } from "./lib/log.mjs";
+
+const USAGE = "cms.mjs <list|create|update|get|upload-image> --site <id> [...]";
+
+// ---- articles-api adapter (wordpress is the same wire contract) ----
+
+class ArticlesApi {
+  constructor(baseUrl, apiKey, author) {
+    this.baseUrl = baseUrl;
+    this.apiKey = apiKey;
+    this.author = author;
+  }
+
+  headers(extra = {}) {
+    return { "X-API-Key": this.apiKey, ...extra };
+  }
+
+  async check(res, what) {
+    if (!res.ok) throw new Error(`${what} failed (${res.status}): ${await res.text()}`);
+    return res;
+  }
+
+  async list({ limit, offset, status } = {}) {
+    const url = new URL("/api/articles", this.baseUrl);
+    if (limit) url.searchParams.set("limit", String(limit));
+    if (offset) url.searchParams.set("offset", String(offset));
+    // Key sent on GET too, so drafts/archived come back for dedup.
+    const res = await this.check(await fetch(url, { headers: this.headers() }), "list");
+    const articles = await res.json();
+    return status ? articles.filter((a) => a.status === status) : articles;
+  }
+
+  async create(article) {
+    const res = await this.check(
+      await fetch(new URL("/api/articles", this.baseUrl), {
+        method: "POST",
+        headers: this.headers({ "Content-Type": "application/json" }),
+        body: JSON.stringify({
+          title: article.title,
+          body: article.body,
+          excerpt: article.excerpt,
+          author: article.author || this.author,
+          status: article.status || "draft",
+          tags: article.tags || [],
+          metaDescription: article.metaDescription,
+          ...(article.slug && { slug: article.slug }),
+        }),
+      }),
+      "create",
+    );
+    return res.json();
+  }
+
+  async update(id, patch) {
+    const res = await this.check(
+      await fetch(new URL(`/api/articles/${id}`, this.baseUrl), {
+        method: "PATCH",
+        headers: this.headers({ "Content-Type": "application/json" }),
+        body: JSON.stringify(patch),
+      }),
+      `update ${id}`,
+    );
+    return res.json().catch(() => ({ ok: true }));
+  }
+
+  async get(id) {
+    const res = await this.check(
+      await fetch(new URL(`/api/articles/${id}`, this.baseUrl), { headers: this.headers() }),
+      `get ${id}`,
+    );
+    return res.json();
+  }
+
+  async uploadImage(id, buf, filename, { purpose = "inline", alt } = {}) {
+    const url = new URL(`/api/articles/${id}/upload-image`, this.baseUrl);
+    url.searchParams.set("purpose", purpose);
+    if (alt) url.searchParams.set("alt_text", alt);
+
+    const form = new FormData();
+    form.append("image", new Blob([buf], { type: guessMime(filename) }), filename);
+
+    // Astro's CSRF checkOrigin inspects multipart POSTs; server-to-server
+    // clients send no Origin by default, so always send a matching one.
+    const res = await this.check(
+      await fetch(url, {
+        method: "POST",
+        headers: this.headers({ Origin: new URL(this.baseUrl).origin }),
+        body: form,
+      }),
+      `upload-image ${id}`,
+    );
+    const { imageUrl } = await res.json();
+    return { imageUrl, path: new URL(imageUrl).pathname };
+  }
+}
+
+// ---- shopify adapter ----
+
+const SHOPIFY_API_VERSION = "2024-01";
+
+class Shopify {
+  constructor(storeUrl, accessToken, author, blogId) {
+    this.storeUrl = storeUrl.replace(/\/$/, "");
+    this.accessToken = accessToken;
+    this.author = author;
+    this.blogId = blogId || null;
+  }
+
+  headers() {
+    return { "X-Shopify-Access-Token": this.accessToken, "Content-Type": "application/json" };
+  }
+
+  adminUrl(p) {
+    return `${this.storeUrl}/admin/api/${SHOPIFY_API_VERSION}/${p}`;
+  }
+
+  async check(res, what) {
+    if (!res.ok) throw new Error(`${what} failed (${res.status}): ${await res.text()}`);
+    return res;
+  }
+
+  async resolveBlogId() {
+    if (this.blogId) return this.blogId;
+    const res = await this.check(
+      await fetch(this.adminUrl("blogs.json"), { headers: this.headers() }),
+      "list blogs",
+    );
+    const { blogs } = await res.json();
+    if (!blogs?.length) throw new Error("No blogs found on this Shopify store");
+    this.blogId = String(blogs[0].id);
+    return this.blogId;
+  }
+
+  async list({ limit, status } = {}) {
+    const blogId = await this.resolveBlogId();
+    const url = new URL(this.adminUrl("articles.json"));
+    url.searchParams.set("blog_id", blogId);
+    if (limit) url.searchParams.set("limit", String(limit));
+    const res = await this.check(await fetch(url, { headers: this.headers() }), "list");
+    const { articles } = await res.json();
+    const mapped = articles.map((a) => ({
+      id: String(a.id),
+      title: a.title,
+      slug: a.handle,
+      status: a.published_at ? "published" : "draft",
+      tags: a.tags ? a.tags.split(", ").filter(Boolean) : [],
+      createdAt: a.created_at,
+      excerpt: a.summary_html ?? undefined,
+    }));
+    return status ? mapped.filter((a) => a.status === status) : mapped;
+  }
+
+  articlePayload(a) {
+    const payload = {};
+    if (a.title !== undefined) payload.title = a.title;
+    if (a.body !== undefined) payload.body_html = a.body;
+    if (a.excerpt !== undefined) payload.summary_html = a.excerpt;
+    if (a.status !== undefined) payload.published = a.status === "published";
+    if (a.tags !== undefined) payload.tags = a.tags.join(", ");
+    if (a.slug !== undefined) payload.handle = a.slug;
+    if (a.metaDescription !== undefined) {
+      payload.metafields = [
+        {
+          key: "description_tag",
+          value: a.metaDescription,
+          type: "single_line_text_field",
+          namespace: "global",
+        },
+      ];
+    }
+    return payload;
+  }
+
+  async create(article) {
+    const blogId = await this.resolveBlogId();
+    const payload = {
+      blog_id: blogId,
+      author: article.author || this.author,
+      published: article.status === "published",
+      ...this.articlePayload(article),
+    };
+    const res = await this.check(
+      await fetch(this.adminUrl("articles.json"), {
+        method: "POST",
+        headers: this.headers(),
+        body: JSON.stringify({ article: payload }),
+      }),
+      "create",
+    );
+    const { article: created } = await res.json();
+    return { id: String(created.id), slug: created.handle };
+  }
+
+  async update(id, patch) {
+    await this.check(
+      await fetch(this.adminUrl(`articles/${id}.json`), {
+        method: "PUT",
+        headers: this.headers(),
+        body: JSON.stringify({ article: this.articlePayload(patch) }),
+      }),
+      `update ${id}`,
+    );
+    return { ok: true };
+  }
+
+  async get() {
+    throw new Error("get is only supported for articles-api sites");
+  }
+
+  async uploadImage(id, buf, filename, { purpose = "inline", alt } = {}) {
+    if (purpose === "hero") {
+      // Featured image: attach directly to the article.
+      const imagePayload = { attachment: buf.toString("base64"), filename };
+      if (alt) imagePayload.alt = alt;
+      const res = await this.check(
+        await fetch(this.adminUrl(`articles/${id}.json`), {
+          method: "PUT",
+          headers: this.headers(),
+          body: JSON.stringify({ article: { image: imagePayload } }),
+        }),
+        `upload hero ${id}`,
+      );
+      const { article } = await res.json();
+      if (!article.image?.src) throw new Error("Shopify returned no image URL after hero upload");
+      return { imageUrl: article.image.src, path: article.image.src };
+    }
+
+    // inline (and og, which Shopify has no slot for — it lands in Files):
+    // staged S3 upload → fileCreate → CDN URL.
+    const mimeType = guessMime(filename);
+    const gql = async (query, variables, what) => {
+      const res = await this.check(
+        await fetch(this.adminUrl("graphql.json"), {
+          method: "POST",
+          headers: this.headers(),
+          body: JSON.stringify({ query, variables }),
+        }),
+        what,
+      );
+      return res.json();
+    };
+
+    const staged = await gql(
+      STAGED_UPLOADS_MUTATION,
+      {
+        input: [
+          {
+            resource: "FILE",
+            filename,
+            mimeType,
+            fileSize: String(buf.byteLength),
+            httpMethod: "POST",
+          },
+        ],
+      },
+      "stagedUploadsCreate",
+    );
+    const target = staged.data?.stagedUploadsCreate?.stagedTargets?.[0];
+    if (!target) throw new Error("No staged upload target returned by Shopify");
+
+    const form = new FormData();
+    for (const p of target.parameters) form.append(p.name, p.value);
+    form.append("file", new Blob([buf], { type: mimeType }), filename);
+    const s3Res = await fetch(target.url, { method: "POST", body: form });
+    if (!s3Res.ok) throw new Error(`S3 upload for inline image failed (${s3Res.status})`);
+
+    const fileData = await gql(
+      FILE_CREATE_MUTATION,
+      { files: [{ originalSource: target.resourceUrl, contentType: "IMAGE" }] },
+      "fileCreate",
+    );
+    const file = fileData.data?.fileCreate?.files?.[0];
+    if (!file?.image?.url) throw new Error("Shopify returned no CDN URL after inline image upload");
+    return { imageUrl: file.image.url, path: file.image.url };
+  }
+}
+
+const STAGED_UPLOADS_MUTATION = `
+    mutation stagedUploadsCreate($input: [StagedUploadInput!]!) {
+        stagedUploadsCreate(input: $input) {
+            stagedTargets {
+                url
+                resourceUrl
+                parameters { name value }
+            }
+            userErrors { field message }
+        }
+    }
+`;
+
+const FILE_CREATE_MUTATION = `
+    mutation fileCreate($files: [FileCreateInput!]!) {
+        fileCreate(files: $files) {
+            files {
+                ... on MediaImage {
+                    image { url }
+                }
+            }
+            userErrors { field message }
+        }
+    }
+`;
+
+function guessMime(p) {
+  const ext = path.extname(p).toLowerCase();
+  return (
+    { ".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".webp": "image/webp" }[
+      ext
+    ] || "image/jpeg"
+  );
+}
+
+// ---- dispatch ----
+
+function makeAdapter(siteId, site) {
+  if (!site.baseUrl) throw new Error(`Site "${siteId}" has no baseUrl configured`);
+  const { key, source } = siteApiKey(siteId, site);
+  if (!key) {
+    throw new Error(
+      `No API key for site "${siteId}". Store one with:\n` +
+        `  security add-generic-password -s seoblog -a "site:${siteId}" -w`,
+    );
+  }
+  info(`  site ${siteId} (${site.cmsType || "articles-api"}), key from ${source}`);
+  if (site.cmsType === "shopify") {
+    return new Shopify(site.baseUrl, key, site.author, site.shopifyBlogId);
+  }
+  // articles-api and wordpress share the same wire contract.
+  return new ArticlesApi(site.baseUrl, key, site.author);
+}
+
+async function readJsonFile(file) {
+  try {
+    return JSON.parse(await readFile(file, "utf8"));
+  } catch (e) {
+    throw new Error(`Could not read JSON from ${file}: ${e.message}`);
+  }
+}
+
+await main(async () => {
+  const [cmd] = process.argv.slice(2);
+  const args = parseArgs(process.argv.slice(3));
+  if (!cmd) fail("missing command", USAGE);
+
+  const { id: siteId, site } = getSite(args.site ?? null);
+  const adapter = makeAdapter(siteId, site);
+
+  switch (cmd) {
+    case "list": {
+      const articles = await adapter.list({
+        limit: args.limit ? Number(args.limit) : undefined,
+        offset: args.offset ? Number(args.offset) : undefined,
+        status: args.status,
+      });
+      report(`${articles.length} article(s)`, { ok: true, articles });
+      break;
+    }
+    case "create": {
+      const article = await readJsonFile(requireArg(args, "file", USAGE));
+      if (!article.title || !article.body) throw new Error("article.json needs title and body");
+      const created = await adapter.create(article);
+      report(`Created ${created.slug} (id ${created.id})`, { ok: true, ...created });
+      break;
+    }
+    case "update": {
+      const id = requireArg(args, "id", USAGE);
+      const patch = await readJsonFile(requireArg(args, "file", USAGE));
+      const updated = await adapter.update(id, patch);
+      report(`Updated ${id}`, { ok: true, article: updated });
+      break;
+    }
+    case "get": {
+      const id = requireArg(args, "id", USAGE);
+      const article = await adapter.get(id);
+      report(`Fetched ${id}`, { ok: true, article });
+      break;
+    }
+    case "upload-image": {
+      const id = requireArg(args, "id", USAGE);
+      const file = requireArg(args, "file", USAGE);
+      const buf = await readFile(file);
+      const purpose = ["hero", "inline", "og"].includes(args.purpose) ? args.purpose : "inline";
+      const result = await adapter.uploadImage(id, buf, path.basename(file), {
+        purpose,
+        alt: args.alt,
+      });
+      report(`Uploaded ${purpose} image → ${result.imageUrl}`, { ok: true, purpose, ...result });
+      break;
+    }
+    default:
+      fail(`unknown command "${cmd}"`, USAGE);
+  }
+});

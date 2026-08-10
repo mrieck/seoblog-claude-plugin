@@ -1,0 +1,16 @@
+{
+  "name": "seoblog-plugin",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "doctor": "node scripts/doctor.mjs"
+  },
+  "dependencies": {
+    "@fal-ai/client": "^1.2.0",
+    "sharp": "^0.33.0"
+  }
+}

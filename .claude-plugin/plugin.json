@@ -1,0 +1,12 @@
+{
+  "name": "seoblog",
+  "version": "0.1.0",
+  "description": "Write and publish SEO-optimized blog posts: keyword + SERP research, competitor analysis, article writing with AI-generated hero/inline/OG images via fal.ai, and draft-first remote publishing to an Articles API, WordPress, or Shopify blog.",
+  "author": {
+    "name": "Mark Rieck"
+  },
+  "homepage": "https://github.com/mrieck/seoblog-claude-plugin",
+  "repository": "https://github.com/mrieck/seoblog-claude-plugin",
+  "license": "MIT",
+  "keywords": ["seo", "blog", "content", "writing", "publishing", "fal", "wordpress", "shopify"]
+}

@@ -1,12 +1,12 @@
 <a name="top"></a>
 
-![seoblog — Research. Write. Rank.](docs/seoblog_banner.png)
+![SEO Blog — Research. Write. Rank.](docs/seoblog_banner.png)
 
-# seoblog
+# SEO Blog Claude Plugin
 
 **Your blog deserves fresh, ranking content. Let Claude write it.**
 
-seoblog is a [Claude Code](https://claude.com/claude-code) plugin that turns
+SEO Blog is a [Claude Code](https://claude.com/claude-code) plugin that turns
 your terminal into an SEO content team. Claude researches the live SERPs and
 your existing articles, finds a topic worth ranking for, writes the piece with
 real SEO craft, generates the hero/inline/social images — and publishes it as a
@@ -56,7 +56,7 @@ In Claude Code:
 
 (`productive-mark` is the marketplace, hosted in
 [mrieck/claude-plugins](https://github.com/mrieck/claude-plugins); `seoblog`
-is the plugin — this repo.)
+is the plugin's install name — this repo.)
 
 That's it for software — when you run `/seoblog:setup`, a free doctor check
 verifies everything (Node 20+, the plugin's two npm packages, connectivity)
@@ -140,7 +140,7 @@ about key resolution — live in [HOW_IT_WORKS.md](HOW_IT_WORKS.md).
 
 ## 📄 License
 
-seoblog is [MIT licensed](LICENSE).
+SEO Blog Claude Plugin is [MIT licensed](LICENSE).
 
 Ported from the Cue Up SEO Blog Writer Apify actor — Claude Code itself is
 the agent now, so the hosted runtime (and its per-run fee) is gone.

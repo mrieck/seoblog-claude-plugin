@@ -1,0 +1,174 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  * { margin: 0; padding: 0; }
+  body { width: 1600px; height: 500px; overflow: hidden; }
+  .banner {
+    position: relative;
+    width: 1600px; height: 500px;
+    background:
+      radial-gradient(620px 420px at 8% 110%, #ffe9c9 0%, rgba(255,233,201,0) 70%),
+      radial-gradient(700px 460px at 96% -15%, #d9f3e7 0%, rgba(217,243,231,0) 72%),
+      radial-gradient(520px 380px at 78% 115%, #e6defb 0%, rgba(230,222,251,0) 70%),
+      linear-gradient(135deg, #f2fbf6 0%, #eefaf3 55%, #eaf6f6 100%);
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  }
+  svg.art { position: absolute; inset: 0; }
+  .word {
+    position: absolute; left: 610px; top: 148px;
+    font-size: 118px; font-weight: 800; letter-spacing: -2px;
+    color: #2e4b41;
+  }
+  .word .accent { color: #2fa87c; }
+  .tag {
+    position: absolute; left: 618px; top: 300px;
+    font-size: 40px; font-style: italic; font-weight: 500;
+    color: #6f927f;
+  }
+  .rule {
+    position: absolute; left: 620px; top: 372px;
+    width: 132px; height: 7px; border-radius: 4px;
+    background: #2fa87c;
+  }
+</style>
+</head>
+<body>
+<div class="banner">
+
+<svg class="art" width="1600" height="500" viewBox="0 0 1600 500">
+
+  <!-- ===== magnifying glass, top right ===== -->
+  <g transform="translate(1448,104) rotate(8)">
+    <!-- sparkles -->
+    <g stroke="#ffc46b" stroke-width="7" stroke-linecap="round" opacity="0.9">
+      <line x1="-92" y1="-60" x2="-92" y2="-82"/>
+      <line x1="-103" y1="-71" x2="-81" y2="-71"/>
+      <line x1="66" y1="-96" x2="66" y2="-112"/>
+      <line x1="58" y1="-104" x2="74" y2="-104"/>
+    </g>
+    <!-- lens -->
+    <circle cx="0" cy="0" r="58" fill="#fffaf3" stroke="#2e4b41" stroke-width="10"/>
+    <circle cx="0" cy="0" r="58" fill="#d9f3e7" opacity="0.45"/>
+    <!-- glint -->
+    <path d="M -28 -18 A 34 34 0 0 1 -6 -36" fill="none" stroke="#ffffff" stroke-width="8" stroke-linecap="round" opacity="0.9"/>
+    <!-- tiny rising line inside the lens -->
+    <polyline points="-30,22 -10,6 6,14 30,-16" fill="none" stroke="#2fa87c" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+    <!-- handle -->
+    <line x1="42" y1="42" x2="96" y2="96" stroke="#2e4b41" stroke-width="18" stroke-linecap="round"/>
+  </g>
+
+  <!-- ===== confetti ===== -->
+  <g>
+    <circle cx="700" cy="72"  r="7" fill="#9fdec4"/>
+    <rect x="905" y="98" width="13" height="13" rx="3" fill="#ffd894" transform="rotate(18 911 104)"/>
+    <circle cx="1120" cy="60" r="6" fill="#c3b2ef"/>
+    <rect x="1252" y="150" width="12" height="12" rx="3" fill="#9fdec4" transform="rotate(-24 1258 156)"/>
+    <circle cx="1330" cy="46" r="8" fill="#ffd894"/>
+    <circle cx="1560" cy="250" r="7" fill="#f9b8c6"/>
+    <rect x="1476" y="330" width="13" height="13" rx="3" fill="#c3b2ef" transform="rotate(30 1482 336)"/>
+    <circle cx="1310" cy="392" r="8" fill="#9fdec4"/>
+    <rect x="1136" y="330" width="12" height="12" rx="3" fill="#ffd894" transform="rotate(-15 1142 336)"/>
+    <circle cx="960" cy="404" r="6" fill="#c3b2ef"/>
+    <circle cx="614" cy="88" r="5" fill="#2fa87c" opacity="0.7"/>
+    <rect x="530" y="368" width="12" height="12" rx="3" fill="#f9b8c6" transform="rotate(12 536 374)"/>
+    <circle cx="76" cy="84" r="7" fill="#f9b8c6"/>
+    <rect x="150" y="52" width="13" height="13" rx="3" fill="#9fdec4" transform="rotate(-20 156 58)"/>
+    <circle cx="252" cy="96" r="5" fill="#c3b2ef"/>
+    <circle cx="480" cy="60" r="6" fill="#ffd894"/>
+  </g>
+
+  <!-- ===== article page + pencil, left ===== -->
+  <g transform="translate(150,96) rotate(-4)">
+    <!-- soft shadow -->
+    <ellipse cx="170" cy="322" rx="205" ry="26" fill="#a8cdbd" opacity="0.4"/>
+
+    <!-- the page -->
+    <rect x="0" y="0" width="340" height="320" rx="16" fill="#fffaf3" stroke="#2e4b41" stroke-width="7"/>
+
+    <!-- hero image placeholder -->
+    <rect x="26" y="28" width="288" height="86" rx="10" fill="#d9f3e7" stroke="#2e4b41" stroke-width="5"/>
+    <circle cx="66" cy="58" r="13" fill="#ffd894"/>
+    <path d="M 40 100 L 110 62 L 168 92 L 232 52 L 300 100 Z" fill="#9fdec4"/>
+
+    <!-- headline -->
+    <rect x="26" y="136" width="212" height="16" rx="8" fill="#2e4b41"/>
+
+    <!-- body lines -->
+    <rect x="26" y="172" width="288" height="11" rx="5.5" fill="#cfe6da"/>
+    <rect x="26" y="196" width="288" height="11" rx="5.5" fill="#cfe6da"/>
+    <rect x="26" y="220" width="196" height="11" rx="5.5" fill="#cfe6da"/>
+
+    <!-- tag chips -->
+    <rect x="26" y="256" width="76" height="26" rx="13" fill="#c3b2ef"/>
+    <rect x="112" y="256" width="64" height="26" rx="13" fill="#f9b8c6"/>
+    <rect x="186" y="256" width="88" height="26" rx="13" fill="#ffd894"/>
+
+    <!-- rising rank chart, breaking out of the page bottom-right -->
+    <g transform="translate(238,206)">
+      <rect x="0" y="0" width="150" height="122" rx="14" fill="#ffffff" stroke="#2e4b41" stroke-width="7"/>
+      <rect x="22" y="76" width="20" height="28" rx="6" fill="#f9b8c6"/>
+      <rect x="56" y="56" width="20" height="48" rx="6" fill="#ffd894"/>
+      <rect x="90" y="34" width="20" height="70" rx="6" fill="#9fdec4"/>
+      <!-- arrow -->
+      <polyline points="20,60 60,36 92,44 128,16" fill="none" stroke="#2fa87c" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+      <polygon points="128,4 138,22 116,24" fill="#2fa87c"/>
+    </g>
+
+    <!-- pencil laid across the page -->
+    <g transform="translate(-58,118) rotate(24)">
+      <!-- shadow -->
+      <rect x="6" y="30" width="240" height="12" rx="6" fill="#2e4b41" opacity="0.12"/>
+      <!-- body -->
+      <rect x="40" y="0" width="180" height="34" rx="6" fill="#ffd894" stroke="#2e4b41" stroke-width="6"/>
+      <line x1="100" y1="3" x2="100" y2="31" stroke="#2e4b41" stroke-width="4" opacity="0.25"/>
+      <line x1="160" y1="3" x2="160" y2="31" stroke="#2e4b41" stroke-width="4" opacity="0.25"/>
+      <!-- tip -->
+      <polygon points="40,0 0,17 40,34" fill="#fffaf3" stroke="#2e4b41" stroke-width="6" stroke-linejoin="round"/>
+      <polygon points="14,11 0,17 14,23" fill="#2e4b41"/>
+      <!-- eraser -->
+      <rect x="220" y="0" width="30" height="34" rx="8" fill="#f9b8c6" stroke="#2e4b41" stroke-width="6"/>
+    </g>
+  </g>
+
+  <!-- ===== search-results strip along the bottom ===== -->
+  <g>
+    <rect x="0" y="452" width="1600" height="48" fill="#2e4b41"/>
+    <g>
+      <!-- repeating result rows: dot + line -->
+      <g fill="#d9f3e7">
+        <circle cx="34"   cy="476" r="8"/>
+        <circle cx="194"  cy="476" r="8"/>
+        <circle cx="354"  cy="476" r="8"/>
+        <circle cx="514"  cy="476" r="8"/>
+        <circle cx="674"  cy="476" r="8"/>
+        <circle cx="834"  cy="476" r="8"/>
+        <circle cx="994"  cy="476" r="8"/>
+        <circle cx="1154" cy="476" r="8"/>
+        <circle cx="1314" cy="476" r="8"/>
+        <circle cx="1474" cy="476" r="8"/>
+      </g>
+      <g fill="#9fdec4">
+        <rect x="54"   y="468" width="104" height="16" rx="8"/>
+        <rect x="214"  y="468" width="104" height="16" rx="8"/>
+        <rect x="374"  y="468" width="104" height="16" rx="8"/>
+        <rect x="534"  y="468" width="104" height="16" rx="8"/>
+        <rect x="694"  y="468" width="104" height="16" rx="8"/>
+        <rect x="854"  y="468" width="104" height="16" rx="8"/>
+        <rect x="1014" y="468" width="104" height="16" rx="8"/>
+        <rect x="1174" y="468" width="104" height="16" rx="8"/>
+        <rect x="1334" y="468" width="104" height="16" rx="8"/>
+        <rect x="1494" y="468" width="104" height="16" rx="8"/>
+      </g>
+    </g>
+  </g>
+</svg>
+
+<div class="word"><span class="accent">seo</span>blog</div>
+<div class="tag">Research. Write. Rank.</div>
+<div class="rule"></div>
+
+</div>
+</body>
+</html>

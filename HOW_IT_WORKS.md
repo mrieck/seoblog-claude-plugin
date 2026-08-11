@@ -21,7 +21,7 @@ MCP server exposing CMS/image tools. In plugin form all of that disappears:
 
 ```
 commands/  write | setup | publish | status      thin entrypoints
-skills/    seo-blog (orchestrator + gates)       what Claude reads
+skills/    seo-blog (orchestrator, autonomous)   what Claude reads
            seo-research | seo-writing | blog-publish
 scripts/   doctor.mjs    preflight, free connectivity check
            gen-image.mjs fal.ai image gen (+OG crop)
@@ -29,14 +29,21 @@ scripts/   doctor.mjs    preflight, free connectivity check
 scripts/lib/ env, config, fal, models, args, log
 ```
 
-## The three gates
+## Autonomous by design
 
-1. **Outline gate** — topic, dedup result, title, H2/H3 plan. No article
-   without approval.
-2. **Spend gate** — image count × price from `scripts/lib/models.mjs` (the one
-   authoritative price registry). No fal call without an explicit yes.
-3. **Publish gate** — drafts only until the user says publish. The create path
-   hardcodes draft-first; the flip is a separate PATCH.
+The write flow asks the user nothing — runs are often scheduled unattended
+(cron/Overboard), so a question means a failed run. The old interactive gates
+became self-enforced invariants:
+
+1. **Outline** — Claude self-checks topic dedup, title, and H2/H3 plan against
+   the config, then proceeds.
+2. **Image spend** — count comes from the articleLength table; price from
+   `scripts/lib/models.mjs` (the one authoritative price registry). The cost is
+   logged in the run report, not asked about.
+3. **Draft-always** — every run ends as a draft; `cms.mjs create` hardcodes
+   `status: "draft"` regardless of input. Publishing is exclusively the
+   separate PATCH flip via `/seoblog:publish` (or a prompt that explicitly
+   says to publish).
 
 ## The Articles API contract
 

@@ -74,7 +74,8 @@ class ArticlesApi {
           body: article.body,
           excerpt: article.excerpt,
           author: article.author || this.author,
-          status: article.status || "draft",
+          // Create is draft-only by design; publishing is exclusively the PATCH flip.
+          status: "draft",
           tags: article.tags || [],
           metaDescription: article.metaDescription,
           ...(article.slug && { slug: article.slug }),
@@ -212,7 +213,8 @@ class Shopify {
     const payload = {
       blog_id: blogId,
       author: article.author || this.author,
-      published: article.status === "published",
+      // Create is draft-only by design; publishing is exclusively the update flip.
+      published: false,
       ...this.articlePayload(article),
     };
     const res = await this.check(

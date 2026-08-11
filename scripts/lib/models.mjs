@@ -1,7 +1,7 @@
 /**
  * The one authoritative registry of generation endpoints + prices, so the spend
- * estimate the user approves and the cost a script reports come from the same
- * numbers. Verify prices against fal.ai/models/<endpoint> when bumping.
+ * estimate logged in the run report and the cost a script reports come from the
+ * same numbers. Verify prices against fal.ai/models/<endpoint> when bumping.
  */
 export const MODELS = {
   image: {

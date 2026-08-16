@@ -61,7 +61,7 @@ own terminal (Keychain service `seoblog`). See Setup below.
 
 ## Phase order in detail
 
-1. **ANALYZE** — read the state file, then `node "$CLAUDE_PLUGIN_ROOT/scripts/cms.mjs" list --site <id>`
+1. **ANALYZE** — read the state file, then `node "${CLAUDE_PLUGIN_ROOT}/scripts/cms.mjs" list --site <id>`
    (the key is sent on GET, so drafts come back too). Build a map of covered
    topics, gaps, and topical clusters. **Dedup rule:** if the topic/keyword is in
    the article history OR similar content exists live, skip it and pick another.
@@ -131,5 +131,5 @@ security add-generic-password -s seoblog -a FAL_API_KEY -w
 security add-generic-password -s seoblog -a "site:<siteId>" -w
 ```
 
-Finish with `node "$CLAUDE_PLUGIN_ROOT/scripts/doctor.mjs" --site <id>` and fix
+Finish with `node "${CLAUDE_PLUGIN_ROOT}/scripts/doctor.mjs" --site <id>` and fix
 anything red. Doctor's connectivity check is free and proves the key works.

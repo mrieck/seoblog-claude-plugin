@@ -13,8 +13,8 @@ description: >-
 All remote calls go through two scripts (stdout = one JSON line, stderr = progress):
 
 ```
-node "$CLAUDE_PLUGIN_ROOT/scripts/cms.mjs" <list|create|update|get|upload-image> --site <id> …
-node "$CLAUDE_PLUGIN_ROOT/scripts/gen-image.mjs" --prompt "…" --out <file> [--purpose hero|inline|og]
+node "${CLAUDE_PLUGIN_ROOT}/scripts/cms.mjs" <list|create|update|get|upload-image> --site <id> …
+node "${CLAUDE_PLUGIN_ROOT}/scripts/gen-image.mjs" --prompt "…" --out <file> [--purpose hero|inline|og]
 ```
 
 Write article/patch JSON to a temp file first — body HTML never goes on argv.

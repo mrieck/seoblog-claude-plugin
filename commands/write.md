@@ -12,7 +12,7 @@ auto-discover mode.
 
 Before anything else:
 
-1. Check the environment: `node "$CLAUDE_PLUGIN_ROOT/scripts/doctor.mjs"`.
+1. Check the environment: `node "${CLAUDE_PLUGIN_ROOT}/scripts/doctor.mjs"`.
    If no site is configured, do NOT start an interview — this command may be
    running unattended. Fail fast: report that setup is missing and that the
    user must run /seoblog:setup, then stop. Same for any failing required

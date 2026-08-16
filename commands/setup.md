@@ -14,5 +14,5 @@ $ARGUMENTS
 3. Print the exact `security add-generic-password` commands for the user to run
    themselves in their own terminal — never accept a key pasted into the chat,
    and never write one from a tool call.
-4. Verify with `node "$CLAUDE_PLUGIN_ROOT/scripts/doctor.mjs" --site <id>` and
+4. Verify with `node "${CLAUDE_PLUGIN_ROOT}/scripts/doctor.mjs" --site <id>` and
    walk through fixing anything that fails.

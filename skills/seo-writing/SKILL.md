@@ -3,7 +3,7 @@ name: seo-writing
 description: >-
   Outline and write an SEO-optimized blog article in HTML: title and meta
   description rules, keyword placement, heading structure, length targets,
-  image placeholders and image-prompt craft. Use when outlining or drafting
+  and image placeholders. Use when outlining or drafting
   blog article content, or fixing SEO issues in an existing draft.
 ---
 
@@ -56,11 +56,10 @@ description: >-
 - Earn trust with real value before introducing the product; link where it fits
   naturally; vary the approach (brief mention vs. deeper integration).
 
-## Image prompt craft
+## Image placeholders
 
-- Be specific: subject, style, composition, lighting, mood — "a modern office
-  workspace with a laptop showing analytics dashboards, natural lighting from
-  large windows, minimalist design" beats "an office".
-- Match the article's tone; derive visuals from the topic and keywords.
-- **Avoid text in images** — AI-generated text comes out garbled.
-- Every image needs descriptive **alt text** (SEO + accessibility).
+- Write each `<!-- IMAGE: … -->` as a concrete brief (subject, setting, time of
+  day, mood) — it becomes the seed of the image prompt.
+- Prompt craft, the defect-prevention checklist, and the vision review/fix
+  loop live in the **blog-images** skill. Every image needs descriptive
+  **alt text** (SEO + accessibility), written from what the final image shows.

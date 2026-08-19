@@ -8,7 +8,12 @@
  * Config shape:
  *   { "defaultSite": "plugmyplugin",
  *     "sites": { "<id>": { "baseUrl", "cmsType", "author", "niche", "toneGuide",
- *                          "directions", "articleLength", "product", "shopifyBlogId" } } }
+ *                          "directions", "articleLength", "product", "shopifyBlogId",
+ *                          "imageReviewRounds" } } }
+ *
+ *   imageReviewRounds (optional, integer 0–3, default 2): paid fix rounds the
+ *   blog-images skill may spend per image after vision review. 0 = review and
+ *   report only. Applied by the skill; scripts pass it through untouched.
  *
  * State shape (replaces the Apify actor's KV blog_poster_state):
  *   { "articleHistory": [{ "id", "slug", "title", "keywords", "status",

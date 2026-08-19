@@ -16,6 +16,7 @@ import { fileURLToPath } from "node:url";
 import { parseArgs } from "./lib/args.mjs";
 import { loadSecrets, secretSource, siteApiKey, configPath } from "./lib/env.mjs";
 import { readConfig } from "./lib/config.mjs";
+import { MAX_REVIEW_ROUNDS } from "./lib/models.mjs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const PLUGIN_ROOT = path.join(HERE, "..");
@@ -87,6 +88,15 @@ for (const id of siteIds) {
   if (!site.baseUrl) {
     check(`site ${id}: baseUrl`, false, { detail: "no baseUrl", fix: "Run /seoblog:setup" });
     continue;
+  }
+  if (site.imageReviewRounds !== undefined) {
+    const r = site.imageReviewRounds;
+    const valid = Number.isInteger(r) && r >= 0 && r <= MAX_REVIEW_ROUNDS;
+    check(`site ${id}: imageReviewRounds`, valid, {
+      required: false,
+      detail: valid ? `${r} fix round(s) per image` : `invalid value ${JSON.stringify(r)} (want integer 0–${MAX_REVIEW_ROUNDS}); skill will clamp`,
+      fix: valid ? "" : `Set "imageReviewRounds" to an integer 0–${MAX_REVIEW_ROUNDS} in ${configPath()}`,
+    });
   }
   const { key, source } = siteApiKey(id, site);
   check(`site ${id}: API key`, !!key, {

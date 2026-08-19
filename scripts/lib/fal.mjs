@@ -8,7 +8,7 @@
  * its MCP tools had per-call timeouts; a CLI does not.)
  */
 import { fal } from "@fal-ai/client";
-import { writeFile, mkdir } from "node:fs/promises";
+import { readFile, writeFile, mkdir } from "node:fs/promises";
 import path from "node:path";
 import { loadSecrets } from "./env.mjs";
 
@@ -50,6 +50,23 @@ export async function submitAndWait(endpoint, input) {
   });
   process.stderr.write("\n");
   return result.data;
+}
+
+/**
+ * Upload a local file to fal storage and return its public URL, so it can be
+ * passed as `image_urls` to an edit endpoint. Uses the same FAL_API_KEY. `File`
+ * is a Node >= 20 global; giving fal a real filename (not the client's
+ * Date.now() fallback) keeps the storage side legible.
+ */
+export async function uploadFile(localPath, { contentType = "image/jpeg" } = {}) {
+  const client = initFal();
+  const abs = path.resolve(localPath);
+  const buf = await readFile(abs);
+  const file = new File([buf], path.basename(abs), { type: contentType });
+  process.stderr.write(`  [fal] uploading ${path.basename(abs)} to fal storage…\n`);
+  const url = await client.storage.upload(file);
+  if (!url) throw new Error(`fal storage upload returned no URL for ${abs}`);
+  return url;
 }
 
 /** Pull the first usable image URL out of a fal result, matching the actor's logic. */

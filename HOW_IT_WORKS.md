@@ -22,9 +22,9 @@ MCP server exposing CMS/image tools. In plugin form all of that disappears:
 ```
 commands/  write | setup | publish | status      thin entrypoints
 skills/    seo-blog (orchestrator, autonomous)   what Claude reads
-           seo-research | seo-writing | blog-publish
+           seo-research | seo-writing | blog-images | blog-publish
 scripts/   doctor.mjs    preflight, free connectivity check
-           gen-image.mjs fal.ai image gen (+OG crop)
+           gen-image.mjs fal.ai image gen + edit rounds (+OG crop/master)
            cms.mjs       list/create/update/get/upload-image, 3 adapters
 scripts/lib/ env, config, fal, models, args, log
 ```
@@ -40,6 +40,14 @@ became self-enforced invariants:
 2. **Image spend** — count comes from the articleLength table; price from
    `scripts/lib/models.mjs` (the one authoritative price registry). The cost is
    logged in the run report, not asked about.
+   **Vision review** — Claude `Read`s every generated image (its own vision, no
+   extra key), gives a one-line verdict against the rubric in the blog-images
+   skill, and fixes real defects (dangling cables, sun in a night scene,
+   garbled text…) with `gen-image.mjs --edit` (fal `nano-banana-pro/edit`,
+   same $0.15) or a regenerate — at most `imageReviewRounds` paid rounds per
+   image (default 2, clamp 3), so worst-case spend is `images × (1 + rounds) ×
+   $0.15` and is reported against actual. Rounds are kept as `.rN.jpg` files
+   and the winner is copied to a canonical name before upload.
 3. **Draft-always** — every run ends as a draft; `cms.mjs create` hardcodes
    `status: "draft"` regardless of input. Publishing is exclusively the
    separate PATCH flip via `/seoblog:publish` (or a prompt that explicitly
@@ -103,8 +111,8 @@ transcript.
 ## Config and state
 
 `~/.config/seoblog/config.json` — sites (baseUrl, cmsType, author, niche, tone,
-directions, articleLength, product, shopifyBlogId) + defaultSite. Non-secret,
-written by setup.
+directions, articleLength, imageReviewRounds, product, shopifyBlogId) +
+defaultSite. Non-secret, written by setup.
 
 `~/.config/seoblog/state/<siteId>.json` — articleHistory + keywordQueue +
 lastRunAt. This replaces the actor's Apify KV store: dedup across runs, and the

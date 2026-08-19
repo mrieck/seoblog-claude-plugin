@@ -3,7 +3,8 @@ name: seo-blog
 description: >-
   Research, write and publish an SEO-optimized blog article end-to-end:
   topic selection, SERP/competitor research, outline, HTML article, AI-generated
-  hero/inline/OG images, and draft-first publishing to the configured blog. Use
+  and vision-reviewed hero/inline/OG images, and draft-first publishing to the
+  configured blog. Use
   when the user asks to "write a blog post", "write an SEO article", "publish to
   my blog", "add a post to the blog", or runs /seoblog:write. Also holds the
   setup interview for /seoblog:setup and the config/state file schemas.
@@ -21,10 +22,11 @@ analyze → select topic → research → outline → write
 This flow is fully autonomous — it runs unattended (e.g. scheduled off-hours),
 so it must complete without ever asking the user anything.
 
-Per-phase craft lives in three sibling skills — load them as you reach each phase:
+Per-phase craft lives in four sibling skills — load them as you reach each phase:
 - **seo-research** — topic selection, SERP analysis, competitor deep-dives, LSI keywords
 - **seo-writing** — outline + article craft: HTML rules, keyword placement, length targets
-- **blog-publish** — script mechanics: create/update/upload via `cms.mjs`, image workflow
+- **blog-images** — image counts/cost, prompt craft, vision review + edit/regenerate fix loop
+- **blog-publish** — script mechanics: create/update/upload via `cms.mjs`, placeholder swap
 
 ## Files you read and edit directly
 
@@ -42,6 +44,7 @@ There is no state server — you own these files with Read/Edit/Write:
     "toneGuide": "Professional and approachable",
     "directions": "",                    // standing house rules, appended to every run
     "articleLength": "medium",           // short | medium | long
+    "imageReviewRounds": 2,              // 0–3 paid fix rounds per image after vision review (default 2)
     "product": null,                     // or {productUrl, productName, tagline, shortDesc, longDesc?, productTags?}
     "shopifyBlogId": null } } }
 ```
@@ -82,16 +85,23 @@ own terminal (Keychain service `seoblog`). See Setup below.
    immediately. Never ask the user to approve it.
 5. **WRITE** — per seo-writing. Full HTML body with `<!-- IMAGE: … -->`
    placeholders (no `<img>` yet), meta description, excerpt, 3–7 tags.
-6. **IMAGES.** Compute the image count from the blog-publish table, note the
-   cost ("N images × $0.15 = $X via fal.ai") in your progress output for the
-   record, and generate immediately — no approval step. If FAL_API_KEY is
-   unset, publish without images and strip the placeholders.
+6. **IMAGES** — per blog-images. Compute the image count from its table, note
+   the cost ("N images × $0.15 = $X base, up to R fix rounds each → worst case
+   $Y via fal.ai") in your progress output for the record, and generate
+   immediately — no approval step. Then **look at every image**: Read each
+   file, give a one-line verdict, and fix real defects (dangling cables, sun in
+   a night scene, garbled text, wrong subject…) with `--edit` or a regenerate,
+   up to the site's `imageReviewRounds` (default 2) per image. Pick the best
+   round per image. If FAL_API_KEY is unset, publish without images and strip
+   the placeholders.
 7. **PUBLISH DRAFT** — per blog-publish: create with `status:"draft"` (ALWAYS
-   draft, never publish directly), generate + upload images, swap placeholders,
-   update the state file (record article, mark keywords completed, set lastRunAt).
+   draft, never publish directly), upload the chosen image files under their
+   canonical names, swap placeholders, update the state file (record article,
+   mark keywords completed, set lastRunAt).
 8. **REPORT.** The article stays a **draft** — that is the terminal state.
-   Report: draft id, slug, live-URL-to-be (`<baseUrl>/blog/<slug>`), image
-   count and cost spent. Previewing drafts is the site's job — point the
+   Report: draft id, slug, live-URL-to-be (`<baseUrl>/blog/<slug>`), per-image
+   review outcome (rounds used, what was fixed), calls made and actual spend vs.
+   worst case, any defects left at the cap. Previewing drafts is the site's job — point the
    user at whatever their site provides (e.g. plugmyplugin.com shows drafts at
    the live URL to signed-in admins); never construct a preview-key URL.
    Note that /seoblog:publish flips it live later. Only flip to published in
@@ -107,7 +117,8 @@ own terminal (Keychain service `seoblog`). See Setup below.
 5. **NEVER ASK QUESTIONS during a write run** — no AskUserQuestion, no
    free-text confirmations ("proceed?", "is this OK?"). Runs are often
    scheduled and unattended; a question means the run fails. Compute the
-   image count from the table and proceed; end at draft and report.
+   image count from the table and proceed; run the image fix rounds on your
+   own judgment; end at draft and report.
 6. Respect the site's `directions` field as standing house rules on every run.
 
 ## Setup interview (for /seoblog:setup)
@@ -122,6 +133,9 @@ it holds no secrets):
 3. Tone guide + default article length (short ~500 / medium ~1200 / long ~2000 words).
 4. Optional product for product-led content (productUrl, productName, tagline, shortDesc).
 5. Optional standing directions.
+6. Image review: write `imageReviewRounds: 2` (the default — Claude looks at
+   every image and spends up to 2 paid fix rounds on defects). Only ask if the
+   user raised image cost/quality; 0 disables paid fixes, 3 is the max.
 
 Then print the exact commands for the user to run **in their own terminal**
 (keys must never pass through your tool calls):

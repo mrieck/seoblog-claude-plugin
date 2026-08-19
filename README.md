@@ -9,7 +9,7 @@
 SEO Blog is a [Claude Code](https://claude.com/claude-code) plugin that turns
 your terminal into an SEO content team. Claude researches the live SERPs and
 your existing articles, finds a topic worth ranking for, writes the piece with
-real SEO craft, generates the hero/inline/social images — and publishes it as a
+real SEO craft, generates *and looks at* the hero/inline/social images — and publishes it as a
 **draft** to your blog. The whole run is autonomous (safe to schedule
 off-hours), and nothing goes live until you flip it.
 
@@ -18,7 +18,7 @@ off-hours), and nothing goes live until you flip it.
 ```
 
 No hosted runtime, no per-run fee — just your Claude subscription and
-~$0.15 per generated image.
+~$0.15 per fal.ai image call (one per image, plus any fix rounds).
 
 ## ✨ What you get
 
@@ -34,6 +34,10 @@ No hosted runtime, no per-run fee — just your Claude subscription and
 - 🖼️ **AI images with alt text** — hero, inline, and a 1200×630 OG social
   image via fal.ai; image count scales with your configured article length,
   and the cost lands in the run report.
+- 👀 **Claude looks at every image** — each one is reviewed with vision for
+  the classic AI tells (cables to nowhere, sun in a night scene, garbled text,
+  wrong subject) and fixed with a targeted edit or a regenerate, up to 2 rounds
+  per image by default (`imageReviewRounds` in your site config).
 - 📥 **Draft-first, always** — every run ends as a draft (it's hardcoded, not
   a convention). Preview on your site, then `/seoblog:publish` flips it live.
 - 🔌 **Three CMS targets** — a generic Articles API, WordPress (via the Cue Up
@@ -74,7 +78,8 @@ security add-generic-password -s seoblog -a FAL_API_KEY -w
 ```
 
 It prompts for the key without echoing it. Skip this and articles are simply
-written without images (~$0.15 per image when enabled).
+written without images (~$0.15 per fal call when enabled — one per image,
+plus up to 2 review-driven fix rounds each).
 
 Not on Keychain terms? Every other place a key can live is covered in
 [HOW_IT_WORKS.md](HOW_IT_WORKS.md#where-keys-live).
@@ -108,9 +113,9 @@ After setup:
 ```
 
 Claude researches what already ranks, self-checks its outline against your
-config and history, writes the article, generates the images, uploads
-everything to your blog as a draft, and hands you a run report with the
-preview link and image spend. Like what you see?
+config and history, writes the article, generates the images and reviews
+each one with vision (fixing what's off), uploads everything to your blog as a
+draft, and hands you a run report with the preview link and image spend. Like what you see?
 
 ```
 /seoblog:publish best-pour-over-coffee-ratio
@@ -122,8 +127,9 @@ is what makes it worth scheduling nightly.
 ## 🔒 What leaves your machine
 
 - **Search queries and page fetches** to research the topic (WebSearch/WebFetch).
-- **Image prompts** to [fal.ai](https://fal.ai) — paid, ~$0.15/image, skipped
-  entirely when no `FAL_API_KEY` is set.
+- **Image prompts** to [fal.ai](https://fal.ai) — paid, ~$0.15/call, skipped
+  entirely when no `FAL_API_KEY` is set. A review fix round re-uploads the
+  generated image itself to fal storage so the edit model can work on it.
 - **The finished article + images** to *your* blog's API, authenticated with
   your key.
 

@@ -18,8 +18,9 @@ Before anything else:
    user must run /seoblog:setup, then stop. Same for any failing required
    check you cannot fix yourself: report exactly what to run and stop.
 2. Never ask the user any questions during this command — it must complete
-   autonomously. Generate the computed image count without asking, and never
-   create an article with any status but "draft".
+   autonomously. Generate the computed image count without asking, review
+   each image yourself and run the bounded fix rounds on your own judgment,
+   and never create an article with any status but "draft".
 
 Then follow the skill: analyze → topic → research → outline → write →
 images → publish draft → report. The article stays a draft unless the

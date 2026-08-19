@@ -1,37 +1,29 @@
 ---
 name: blog-publish
 description: >-
-  Publishing mechanics for blog articles: creating drafts, generating and
-  uploading hero/inline/OG images, swapping image placeholders, flipping drafts
-  to published, and recording state — all via the plugin's cms.mjs and
-  gen-image.mjs scripts. Use when publishing a written article, uploading blog
-  images, listing drafts, or when the user runs /seoblog:publish.
+  Publishing mechanics for blog articles: creating drafts, uploading the
+  reviewed hero/inline/OG images, swapping image placeholders, flipping drafts
+  to published, and recording state — all via the plugin's cms.mjs script.
+  Use when publishing a written article, uploading blog images, listing
+  drafts, or when the user runs /seoblog:publish.
 ---
 
 # Blog publishing mechanics
 
-All remote calls go through two scripts (stdout = one JSON line, stderr = progress):
+All remote calls go through `cms.mjs` (stdout = one JSON line, stderr = progress):
 
 ```
 node "${CLAUDE_PLUGIN_ROOT}/scripts/cms.mjs" <list|create|update|get|upload-image> --site <id> …
-node "${CLAUDE_PLUGIN_ROOT}/scripts/gen-image.mjs" --prompt "…" --out <file> [--purpose hero|inline|og]
 ```
 
 Write article/patch JSON to a temp file first — body HTML never goes on argv.
 
-## Image counts
+## Images
 
-From the site's articleLength, **plus always exactly one OG image** when
-publishing with images enabled:
-
-| length | hero | inline | og |
-|---|---|---|---|
-| short | 1 | 0 | 1 |
-| medium | 1 | 1 | 1 |
-| long | 1 | 2 | 1 |
-
-Cost = images × $0.15 (fal-ai/nano-banana-pro). Note this estimate in your
-progress output for the record, then proceed — no approval step.
+Counts, cost, prompt craft and the generate → review → fix loop live in the
+**blog-images** skill (`gen-image.mjs`). Cost is $0.15 per fal call — base
+`images × $0.15`, plus up to `imageReviewRounds` fix rounds per image. Note the
+estimate in your progress output, then proceed — no approval step.
 
 ## Publish-draft sequence
 
@@ -39,14 +31,14 @@ progress output for the record, then proceed — no approval step.
    status: "draft", tags, metaDescription}) to a temp dir, then
    `cms.mjs create --site <id> --file article.json` → `{id, slug}`.
    `status` is ALWAYS "draft" here.
-2. **Generate images** — for each planned image run
-   `gen-image.mjs` with a crafted prompt (see seo-writing's image-prompt craft):
-   - hero: `--purpose hero` (16:9)
-   - inline: `--purpose inline` (16:9 or 4:3, per placement)
-   - og: `--purpose og` (auto-crops to exactly 1200×630)
-   Kebab-case, slug-based filenames (e.g. `<slug>-hero.jpg`).
-3. **Upload** — per image:
-   `cms.mjs upload-image --site <id> --id <articleId> --file <img> --purpose <p> --alt "…"`
+2. **Generate + review images** — per blog-images: hero `--purpose hero`
+   (16:9), inline `--purpose inline` (16:9 or 4:3, per placement), og
+   `--purpose og` (auto-crops to exactly 1200×630). Round files are
+   `<slug>-<purpose>.rN.jpg`; after the review loop copy the winning round to
+   the canonical kebab-case name `<slug>-<purpose>.jpg`.
+3. **Upload** — per image, the **canonical file only** (never a `.rN` or `.src`
+   file — the basename can surface in public URLs):
+   `cms.mjs upload-image --site <id> --id <articleId> --file <slug>-<purpose>.jpg --purpose <p> --alt "…"`
    → `{imageUrl, path}`. Alt text is required for hero and inline.
 4. **Swap placeholders** — build the patched body: replace each
    `<!-- IMAGE: … -->` with `<img src="<path>" alt="…" />`, matching each image

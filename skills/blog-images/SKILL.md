@@ -20,7 +20,16 @@ The script (stdout = one JSON line, stderr = progress):
 ```
 node "${CLAUDE_PLUGIN_ROOT}/scripts/gen-image.mjs" --prompt "…" --out <file> [--purpose hero|inline|og] [--aspect 16:9|4:3|1:1|3:4|9:16]
 node "${CLAUDE_PLUGIN_ROOT}/scripts/gen-image.mjs" --edit <editSource> --prompt "<edit instruction>" --out <new file> [--purpose …]
+node "${CLAUDE_PLUGIN_ROOT}/scripts/gen-image.mjs" [--edit <editSource>] --ref <logo.svg|png> [--ref …] --prompt "…" --out <file>
 ```
+
+`--ref` (repeatable) attaches reference images — the site's real logo/app icon,
+a product screenshot, a style sample. Refer to them by position in the prompt
+("image 1 is the scene to edit; image 2 is the exact logo to reproduce").
+**Whenever a prompt asks for the product's logo or icon, pass the real file as
+`--ref` instead of describing it** — described marks come out approximately
+right, referenced ones come out right. SVGs are rasterized automatically.
+Without `--edit`, refs still route through the edit endpoint (same $0.15).
 
 Output: `{ok, mode: "generate"|"edit", path, editSource, width, height, costUsd, purpose}`.
 `path` is the file that ships (for og: the 1200×630 crop); `editSource` is what

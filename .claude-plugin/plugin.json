@@ -1,6 +1,6 @@
 {
   "name": "seoblog",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Write and publish SEO-optimized blog posts: keyword + SERP research, competitor analysis, article writing with AI-generated, vision-reviewed hero/inline/OG images via fal.ai, and draft-first remote publishing to an Articles API, WordPress, or Shopify blog.",
   "author": {
     "name": "Mark Rieck"

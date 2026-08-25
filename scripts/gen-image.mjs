@@ -15,6 +15,12 @@
  *        The source is uploaded to fal storage; --prompt is the edit instruction.
  *        --out must be a NEW file (rounds are never overwritten so the reviewer
  *        can compare them and fall back).
+ *   --ref <file>        (repeatable) extra reference images — a real logo, a
+ *        product shot, a style sample — sent to the edit endpoint alongside the
+ *        source, so the prompt can say "the logo in the second image". Works with
+ *        --edit (source is image 1, refs follow) and without it (pure
+ *        reference-guided generation, still via the edit endpoint). PNG/JPEG/WebP
+ *        as-is; SVG is rasterized to PNG first (fal wants a raster).
  *
  * --purpose og generates at 16:9 and center-crops to exactly 1200×630 (the
  * social-card ratio; nano-banana-pro has no 1.91:1 aspect option). The uncropped
@@ -27,6 +33,7 @@
  */
 import sharp from "sharp";
 import { readFile, writeFile, copyFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
 import path from "node:path";
 import { parseArgs, requireArg } from "./lib/args.mjs";
 import { submitAndWait, extractUrl, download, uploadFile } from "./lib/fal.mjs";
@@ -34,7 +41,26 @@ import { MODELS } from "./lib/models.mjs";
 import { main, info, report } from "./lib/log.mjs";
 
 const USAGE =
-  'gen-image.mjs --prompt "..." --out <file.jpg> [--aspect 1:1|16:9|9:16|4:3|3:4] [--purpose hero|inline|og] [--edit <source.jpg>]';
+  'gen-image.mjs --prompt "..." --out <file.jpg> [--aspect 1:1|16:9|9:16|4:3|3:4] [--purpose hero|inline|og] [--edit <source.jpg>] [--ref <image> …]';
+
+const RASTER_TYPES = { ".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".webp": "image/webp" };
+
+/**
+ * Upload a reference image to fal storage. SVGs are rasterized to a 1024px PNG
+ * first; anything else must already be a raster the model accepts.
+ */
+async function uploadRef(file) {
+  const abs = path.resolve(file);
+  const ext = path.extname(abs).toLowerCase();
+  if (ext === ".svg") {
+    const png = path.join(tmpdir(), `${path.basename(abs, ext)}.ref.png`);
+    await sharp(abs, { density: 300 }).resize(1024, 1024, { fit: "inside" }).png().toFile(png);
+    return uploadFile(png, { contentType: "image/png" });
+  }
+  const contentType = RASTER_TYPES[ext];
+  if (!contentType) throw new Error(`--ref ${file}: unsupported type ${ext || "(none)"}; use png/jpg/webp/svg`);
+  return uploadFile(abs, { contentType });
+}
 
 /** `/a/b/x-og.r0.jpg` → `/a/b/x-og.r0.src.jpg` (the uncropped master for og images). */
 function masterPathFor(outPath) {
@@ -59,13 +85,15 @@ function nearestAspect(width, height, ratios) {
 }
 
 await main(async () => {
-  const args = parseArgs(process.argv.slice(2));
+  const args = parseArgs(process.argv.slice(2), { multi: ["ref"] });
   const prompt = requireArg(args, "prompt", USAGE);
   const out = path.resolve(requireArg(args, "out", USAGE));
   const purpose = ["hero", "inline", "og"].includes(args.purpose) ? args.purpose : "inline";
   const editSrc =
     args.edit && args.edit !== true ? path.resolve(String(args.edit)) : null;
-  const mode = editSrc ? "edit" : "generate";
+  const refs = (args.ref ?? []).filter((r) => r !== true).map(String);
+  // References ride on the edit endpoint; a generate-with-refs is still an "edit" call to fal.
+  const mode = editSrc || refs.length ? "edit" : "generate";
 
   if (editSrc && (out === editSrc || out === masterPathFor(editSrc) || masterPathFor(out) === editSrc)) {
     throw new Error("--out would overwrite the --edit source round; write each round to a new file");
@@ -89,8 +117,12 @@ await main(async () => {
 
   const input = { ...model.input, prompt, aspect_ratio: aspect };
   if (mode === "edit") {
-    info(`Editing ${purpose} image (${aspect}) from ${path.basename(editSrc)} via ${model.endpoint}…`);
-    input.image_urls = [await uploadFile(editSrc)];
+    const from = editSrc ? `from ${path.basename(editSrc)}` : "from references";
+    const withRefs = refs.length ? ` + ${refs.length} ref${refs.length > 1 ? "s" : ""}` : "";
+    info(`Editing ${purpose} image (${aspect}) ${from}${withRefs} via ${model.endpoint}…`);
+    input.image_urls = [];
+    if (editSrc) input.image_urls.push(await uploadFile(editSrc));
+    for (const r of refs) input.image_urls.push(await uploadRef(r));
   } else {
     info(`Generating ${purpose} image (${aspect}) via ${model.endpoint}…`);
   }

@@ -15,12 +15,19 @@
  *   blog-images skill may spend per image after vision review. 0 = review and
  *   report only. Applied by the skill; scripts pass it through untouched.
  *
+ *   Optional top-level "socialCue" (for /seoblog:socialcue — see socialcue.mjs):
+ *   { "dir": "/abs/path/.socialdiscovery",   // the SocialCue store to write to
+ *     "cliPath": null,                        // override for SocialCue's lib/cli.js
+ *     "brandBySite": { "<siteId>": "<brand name>" } }   // site → brand hints
+ *
  * State shape (replaces the Apify actor's KV blog_poster_state):
  *   { "articleHistory": [{ "id", "slug", "title", "keywords", "status",
  *                          "wordCount", "createdAt" }],
  *     "keywordQueue":   [{ "keyword", "status": "pending|in-progress|completed",
  *                          "articleId" }],
- *     "lastRunAt": "<iso>" }
+ *     "lastRunAt": "<iso>",
+ *     "socialPosts":    [{ "contentItemId", "title", "brandName", "platform",
+ *                          "hostSite", "assetHolderId", "createdAt" }] }
  *
  * Unlike secrets, non-secret config IS written from scripts — there is nothing
  * sensitive about a base URL or a tone guide.
@@ -31,12 +38,13 @@ import { configPath } from "./env.mjs";
 
 export function readConfig() {
   const file = configPath();
-  if (!existsSync(file)) return { defaultSite: null, sites: {} };
+  if (!existsSync(file)) return { defaultSite: null, sites: {}, socialCue: null };
   try {
     const parsed = JSON.parse(readFileSync(file, "utf8"));
     return {
       defaultSite: parsed.defaultSite ?? null,
       sites: parsed.sites && typeof parsed.sites === "object" ? parsed.sites : {},
+      socialCue: parsed.socialCue && typeof parsed.socialCue === "object" ? parsed.socialCue : null,
     };
   } catch (e) {
     throw new Error(`Malformed config at ${file}: ${e.message}`);
@@ -66,7 +74,7 @@ export function statePath(siteId) {
   return path.join(path.dirname(configPath()), "state", `${siteId}.json`);
 }
 
-const EMPTY_STATE = { articleHistory: [], keywordQueue: [], lastRunAt: null };
+const EMPTY_STATE = { articleHistory: [], keywordQueue: [], lastRunAt: null, socialPosts: [] };
 
 export function readState(siteId) {
   const file = statePath(siteId);
@@ -77,6 +85,8 @@ export function readState(siteId) {
       articleHistory: Array.isArray(parsed.articleHistory) ? parsed.articleHistory : [],
       keywordQueue: Array.isArray(parsed.keywordQueue) ? parsed.keywordQueue : [],
       lastRunAt: parsed.lastRunAt ?? null,
+      // SocialCue posts written by /seoblog:socialcue (dedup + audit trail).
+      socialPosts: Array.isArray(parsed.socialPosts) ? parsed.socialPosts : [],
     };
   } catch {
     // Corrupt state should not block a run; dedup degrades to the live CMS list.

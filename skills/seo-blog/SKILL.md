@@ -46,7 +46,11 @@ There is no state server — you own these files with Read/Edit/Write:
     "articleLength": "medium",           // short | medium | long
     "imageReviewRounds": 2,              // 0–3 paid fix rounds per image after vision review (default 2)
     "product": null,                     // or {productUrl, productName, tagline, shortDesc, longDesc?, productTags?}
-    "shopifyBlogId": null } } }
+    "shopifyBlogId": null } },
+  "socialCue": {                          // optional — only /seoblog:socialcue uses it
+    "dir": "/abs/path/.socialdiscovery",  // the SocialCue store to write to (else $SOCIALCUE_DIR / cwd walk-up)
+    "cliPath": null,                      // override for SocialCue's lib/cli.js (else newest plugin cache copy)
+    "brandBySite": { "plugmyplugin": "PlugMyPlugin" } } }   // site → SocialCue brand hints
 ```
 
 **State** `~/.config/seoblog/state/<siteId>.json` — memory across runs:
@@ -56,16 +60,22 @@ There is no state server — you own these files with Read/Edit/Write:
                        "status": "draft", "wordCount": 1200, "createdAt": "<iso>" }],
   "keywordQueue":   [{ "keyword": "…", "status": "pending|in-progress|completed",
                        "articleId": null }],
-  "lastRunAt": "<iso>" }
+  "lastRunAt": "<iso>",
+  "socialPosts":    [{ "contentItemId": "…", "title": "…", "brandName": "…", "platform": "indiehackers",
+                       "hostSite": "plugmyplugin", "assetHolderId": "42", "createdAt": "<iso>" }] }
 ```
+
+`socialPosts` is written by /seoblog:socialcue (the **social-article** skill);
+the blog flows leave it untouched.
 
 API keys are NEVER written by you or any script — the user stores them in their
 own terminal (Keychain service `seoblog`). See Setup below.
 
 ## Phase order in detail
 
-1. **ANALYZE** — read the state file, then `node "${CLAUDE_PLUGIN_ROOT}/scripts/cms.mjs" list --site <id>`
-   (the key is sent on GET, so drafts come back too). Build a map of covered
+1. **ANALYZE** — read the state file, then `node "${CLAUDE_PLUGIN_ROOT}/scripts/cms.mjs" list --site <id> --exclude-assets`
+   (the key is sent on GET, so drafts come back too; `--exclude-assets` hides
+   the SocialCue image-holder drafts, which are not content). Build a map of covered
    topics, gaps, and topical clusters. **Dedup rule:** if the topic/keyword is in
    the article history OR similar content exists live, skip it and pick another.
 2. **SELECT TOPIC** — keyword mode (user gave keywords: first = primary, rest =
@@ -136,6 +146,11 @@ it holds no secrets):
 6. Image review: write `imageReviewRounds: 2` (the default — Claude looks at
    every image and spends up to 2 paid fix rounds on defects). Only ask if the
    user raised image cost/quality; 0 disables paid fixes, 3 is the max.
+7. SocialCue (optional, only if the user mentions SocialCue / Indie Hackers /
+   dev.to posting or the doctor found the SocialCue plugin): ask which project
+   holds their `.socialdiscovery/` store and write `socialCue.dir`; when the
+   store's brands are known, write `socialCue.brandBySite` for this site.
+   Skip silently otherwise — /seoblog:socialcue also finds the store from cwd.
 
 Then print the exact commands for the user to run **in their own terminal**
 (keys must never pass through your tool calls):

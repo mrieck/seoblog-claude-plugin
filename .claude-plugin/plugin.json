@@ -1,12 +1,24 @@
 {
   "name": "seoblog",
-  "version": "0.2.0",
-  "description": "Write and publish SEO-optimized blog posts: keyword + SERP research, competitor analysis, article writing with AI-generated, vision-reviewed hero/inline/OG images via fal.ai, and draft-first remote publishing to an Articles API, WordPress, or Shopify blog.",
+  "version": "0.3.0",
+  "description": "Write and publish SEO-optimized blog posts: keyword + SERP research, competitor analysis, article writing with AI-generated, vision-reviewed hero/inline/OG images via fal.ai, and draft-first remote publishing to an Articles API, WordPress, or Shopify blog. Also writes original Indie Hackers / dev.to posts straight into the Social Cue plugin's Content Library.",
   "author": {
     "name": "Mark Rieck"
   },
   "homepage": "https://github.com/mrieck/seoblog-claude-plugin",
   "repository": "https://github.com/mrieck/seoblog-claude-plugin",
   "license": "MIT",
-  "keywords": ["seo", "blog", "content", "writing", "publishing", "fal", "wordpress", "shopify"]
+  "keywords": [
+    "seo",
+    "blog",
+    "content",
+    "writing",
+    "publishing",
+    "fal",
+    "wordpress",
+    "shopify",
+    "socialcue",
+    "indiehackers",
+    "devto"
+  ]
 }

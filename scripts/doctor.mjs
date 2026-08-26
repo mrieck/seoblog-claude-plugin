@@ -17,6 +17,7 @@ import { parseArgs } from "./lib/args.mjs";
 import { loadSecrets, secretSource, siteApiKey, configPath } from "./lib/env.mjs";
 import { readConfig } from "./lib/config.mjs";
 import { MAX_REVIEW_ROUNDS } from "./lib/models.mjs";
+import { findSocialCueCli, findSocialCueStore, readSocialCueBrands } from "./lib/socialcue-locate.mjs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const PLUGIN_ROOT = path.join(HERE, "..");
@@ -135,6 +136,27 @@ for (const id of siteIds) {
       fix: "Is the site running and reachable from this machine?",
     });
   }
+}
+
+// -- SocialCue (optional; only /seoblog:socialcue needs it) --
+if (config) {
+  const cli = findSocialCueCli(config);
+  const store = cli && !cli.error ? findSocialCueStore(config) : null;
+  const brands = store?.storeDir ? readSocialCueBrands(store.storeDir) : [];
+  const ok = !!(cli && !cli.error && store && !store.error);
+  check("SocialCue (for /seoblog:socialcue)", ok, {
+    required: false,
+    detail: !cli || cli.error
+      ? "plugin not found — /seoblog:socialcue unavailable"
+      : !store || store.error
+        ? `cli ${cli.version ?? "?"} found; no .socialdiscovery store from this cwd`
+        : `cli ${cli.version ?? "?"}, store ${store.storeDir} (${brands.length} brand(s))`,
+    fix: !cli || cli.error
+      ? "/plugin install socialcue@productive-mark (or set socialCue.cliPath in config)"
+      : !store || store.error
+        ? "Run from your SocialCue project, or set socialCue.dir in ~/.config/seoblog/config.json"
+        : "",
+  });
 }
 
 // -- report --

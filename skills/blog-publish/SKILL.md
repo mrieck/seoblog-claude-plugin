@@ -60,7 +60,11 @@ The write flow ends at draft + report and never asks about publishing; the
 flip only happens via /seoblog:publish or when the user's prompt explicitly
 said to publish.
 
-- List drafts: `cms.mjs list --site <id> --status draft`.
+- List drafts: `cms.mjs list --site <id> --status draft --exclude-assets`.
+  `--exclude-assets` hides SocialCue **image-holder drafts** (slug
+  `sc-assets-*`, tag `socialcue-assets`, created by /seoblog:socialcue to
+  host post images). Never flip one of those: if a named target is an asset
+  holder, refuse and explain that it is image storage for a SocialCue post.
 - Show the user title and live-URL-to-be (`<baseUrl>/blog/<slug>`). Previewing
   drafts is the site's job, not this plugin's — point the user at whatever
   their site provides (e.g. plugmyplugin.com shows drafts at the live URL to
@@ -70,6 +74,14 @@ said to publish.
   `{"status": "published"}`.
 - Verify with `cms.mjs get --id <articleId>` (articles-api only) and print the
   live URL. Update the article's status in the state file.
+
+## Asset-holder drafts (from /seoblog:socialcue)
+
+`socialcue.mjs host-images` creates one draft per SocialCue post whose only
+job is to give that post's images public URLs (the upload endpoint hangs off
+an article id). Recognise them by slug prefix `sc-assets-` or tag
+`socialcue-assets`; always pass `--exclude-assets` to `cms.mjs list` in the
+blog flows, never publish them, and never count them as blog content.
 
 ## Per-CMS notes
 

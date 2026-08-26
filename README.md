@@ -48,6 +48,10 @@ No hosted runtime, no per-run fee — just your Claude subscription and
   cron-friendly: wake up to a new draft, not to a stuck prompt.
 - 🗂️ **Persistent memory per site** — article history and keyword queue live
   in `~/.config/seoblog`, surviving plugin updates.
+- 📣 **Writes for Indie Hackers & dev.to too** — `/seoblog:socialcue` writes an
+  original, platform-native markdown post (with hosted, vision-reviewed
+  images) straight into the [Social Cue](https://trysocialcue.com) plugin's
+  Content Library, where `/socialcue-post` posts it from your own browser.
 
 ## 🚀 Install
 
@@ -103,6 +107,7 @@ check that proves connectivity before you ever burn a run.
 | `/seoblog:publish [slug]` | Flip a draft to published (no slug: lists your drafts) |
 | `/seoblog:status` | Health check + article history + keyword queue + pending drafts |
 | `/seoblog:setup` | Add or edit a site configuration |
+| `/seoblog:socialcue <describe the post>` | Write an original Indie Hackers / dev.to / Reddit post in markdown, host its images on your blog, and drop it into SocialCue's Content Library as a draft (needs the Social Cue plugin) |
 
 ## ✍️ Write your first article
 
@@ -123,6 +128,25 @@ draft, and hands you a run report with the preview link and image spend. Like wh
 
 Run `/seoblog:write` with no arguments and it works the keyword queue — which
 is what makes it worth scheduling nightly.
+
+## 📣 Write for Indie Hackers, dev.to and friends
+
+If you also run the [Social Cue](https://trysocialcue.com) plugin, seoblog can
+be its writer:
+
+```
+/seoblog:socialcue Indie Hackers post: how I built my plugin on the Claude subscription instead of paying for an API
+```
+
+Claude writes an **original**, platform-native markdown post (not a repost of
+a blog article), generates and vision-reviews the images, hosts them on the
+configured blog site that best fits the brand (Indie Hackers can't upload
+images, so they need public URLs — they live in a hidden draft your blog
+flows ignore), and drops the post into SocialCue's Content Library as a draft.
+From there `/socialcue:socialcue-post "<title>" to indiehackers` posts it from
+your own browser, with a review stop before anything is submitted. It asks at
+most two questions: which brand (if unclear) and where to host images (if no
+site fits).
 
 ## 🔒 What leaves your machine
 

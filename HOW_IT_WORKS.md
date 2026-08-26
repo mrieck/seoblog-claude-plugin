@@ -20,13 +20,17 @@ MCP server exposing CMS/image tools. In plugin form all of that disappears:
   progress. That's what makes them composable from a skill.
 
 ```
-commands/  write | setup | publish | status      thin entrypoints
+commands/  write | setup | publish | status | socialcue   thin entrypoints
 skills/    seo-blog (orchestrator, autonomous)   what Claude reads
            seo-research | seo-writing | blog-images | blog-publish
-scripts/   doctor.mjs    preflight, free connectivity check
+           social-article (orchestrator for /seoblog:socialcue, two questions max)
+scripts/   doctor.mjs    preflight, free connectivity check (+ SocialCue row)
            gen-image.mjs fal.ai image gen + edit rounds (+OG crop/master)
-           cms.mjs       list/create/update/get/upload-image, 3 adapters
-scripts/lib/ env, config, fal, models, args, log
+           cms.mjs       list/create/update/get/upload-image
+           socialcue.mjs locate SocialCue, host images, add a content item
+scripts/lib/ env, config, fal, models, args, log,
+           cms-adapters (3 adapters, shared by cms.mjs + socialcue.mjs),
+           socialcue-locate, socialcue-assets
 ```
 
 ## Autonomous by design
@@ -52,6 +56,42 @@ became self-enforced invariants:
    `status: "draft"` regardless of input. Publishing is exclusively the
    separate PATCH flip via `/seoblog:publish` (or a prompt that explicitly
    says to publish).
+
+## Writing for SocialCue (/seoblog:socialcue)
+
+[Social Cue](https://trysocialcue.com) keeps a per-project Content Library
+(`<project>/.socialdiscovery/socialcue.db`) and posts items from it to Indie
+Hackers, dev.to, subreddits etc. through the user's own browser. seoblog acts
+as a **producer agent** for it, using SocialCue's documented contract
+(`node <socialcue>/lib/cli.js content add -`): one item, `status: draft`,
+`source: seoblog`, `format: markdown`, a `notes` line for the poster, and
+`media` = the local image files (hero first). SocialCue copies the files into
+its store at ingest, so the scratch dir can vanish afterwards.
+
+Three things make this non-trivial:
+
+- **Finding SocialCue from another plugin.** `${CLAUDE_PLUGIN_ROOT}` is
+  seoblog's own dir. `scripts/lib/socialcue-locate.mjs` resolves the CLI
+  (`socialCue.cliPath` → `$SOCIALCUE_CLI` → newest
+  `~/.claude/plugins/cache/*/socialcue/<ver>/lib/cli.js` **whose native
+  better-sqlite3 actually loads under the running Node** — cache copies carry
+  the node_modules they were built with) and the store (`socialCue.dir` →
+  `$SOCIALCUE_DIR` → nearest ancestor of cwd with
+  `.socialdiscovery/config.json`; a store is never created implicitly).
+- **Images need public URLs.** Indie Hackers has no image upload; dev.to only
+  via its editor. The only host seoblog has is the blog CMS, whose upload
+  endpoint hangs off an article id. So `socialcue.mjs host-images` creates one
+  **asset-holder draft** on the best-fitting site (slug `sc-assets-<post>`,
+  tag `socialcue-assets`), uploads the images to it, and returns absolute
+  `imageUrl`s for `![alt](url)`. The Articles API serves `/blog/images/:id`
+  regardless of post status, so the holder is never published; `cms.mjs list
+  --exclude-assets` hides holders from every blog flow. A future
+  `POST /api/images` on the servers would make the holder unnecessary — the
+  change is local to `socialcue.mjs`.
+- **It may ask — twice at most.** Unlike the write flow this command is run
+  by a person: it asks which brand when the description doesn't settle it,
+  and where to host images when no configured site fits the brand (or offers
+  a no-images post). Nothing else.
 
 ## The Articles API contract
 
@@ -112,10 +152,11 @@ transcript.
 
 `~/.config/seoblog/config.json` — sites (baseUrl, cmsType, author, niche, tone,
 directions, articleLength, imageReviewRounds, product, shopifyBlogId) +
-defaultSite. Non-secret, written by setup.
+defaultSite + optional `socialCue` (dir, cliPath, brandBySite). Non-secret,
+written by setup.
 
 `~/.config/seoblog/state/<siteId>.json` — articleHistory + keywordQueue +
-lastRunAt. This replaces the actor's Apify KV store: dedup across runs, and the
+lastRunAt + socialPosts (what /seoblog:socialcue wrote into SocialCue). This replaces the actor's Apify KV store: dedup across runs, and the
 queue is what a bare `/seoblog:write` drains. Claude edits these files directly;
 there is no IPC.
 

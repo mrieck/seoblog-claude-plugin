@@ -63,3 +63,40 @@ description: >-
 - Prompt craft, the defect-prevention checklist, and the vision review/fix
   loop live in the **blog-images** skill. Every image needs descriptive
   **alt text** (SEO + accessibility), written from what the final image shows.
+
+## Platform-native markdown (for /seoblog:socialcue)
+
+Used by the **social-article** skill. The body is **markdown**, not HTML, and it
+is pasted by SocialCue into the platform's editor as-is, so:
+
+- `##`/`###` headings only — no `#` (the platform renders the title), no HTML
+  tags, no front matter, no inline styles.
+- Short paragraphs (1–3 sentences), lists where they help, `**bold**` sparingly,
+  links inline as `[text](url)`, code in fences when relevant.
+- Images are `![alt](absolute-url)` on their own line. While drafting, write the
+  same `<!-- IMAGE: concrete brief -->` placeholders as blog articles; the
+  hero brief goes **first, before the opening paragraph**. They are swapped for
+  hosted URLs after generation (never a root-relative path — these platforms
+  cannot resolve them).
+- Length targets reuse the table above. Titles follow the platform, not the
+  SEO rules: conversational, specific, honest — no keyword stuffing, the
+  <60-char rule does not apply.
+- Same non-negotiables as blog content: no invented numbers, no plagiarism,
+  cite what you assert.
+
+Per platform:
+
+- **Indie Hackers** — first-person maker story: what you built, why, what
+  happened, what you learned; numbers only when real. Markdown editor, no
+  cover-image slot, no image upload (hence hosted URLs). One product link
+  near the end, in context. Title reads like a forum post ("How I…", "What I
+  learned…", "I shipped X in Y and…"), not a headline.
+- **dev.to** — technical, concrete, code where it helps; ≤ 4 tags chosen from
+  dev.to's own list. The cover image is uploaded separately by SocialCue from
+  `media[0]` — do **not** put the hero URL in the body for dev.to; keep inline
+  images in the body. No front matter.
+- **Hashnode** — like dev.to; cover from `media[0]`, inline images in body.
+- **Reddit / forums** — conversational, disclose that you built it, no
+  headings in most subs, **no inline images** (attach `media` instead, only
+  where the sub allows), link only where the rules allow. Keep it short.
+- **generic** — Indie Hackers rules.

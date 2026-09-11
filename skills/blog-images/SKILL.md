@@ -60,17 +60,69 @@ image, so the run's worst case is `images × (1 + R) × $0.15`.
 
 ## Prompt craft
 
-- Be specific: subject, style, composition, lighting, mood — "a modern office
-  workspace with a laptop showing analytics dashboards, natural lighting from
-  large windows, minimalist design" beats "an office".
-- Match the article's tone and the site's `toneGuide`; derive visuals from the
-  topic, the `<!-- IMAGE: … -->` placeholder text, and the keywords.
+### Hero: concept first — never the default scene
+
+The hero is the one image a reader sees before deciding whether to read. A
+"person at a laptop", "tidy desk with coffee and notebook", "glowing screen
+in a dark room" or "hands typing" scene is the **default failure**: it says
+nothing about the post and looks like every other blog on the internet. It is
+a **blocking defect** in the review rubric below, not a safe choice. The user
+can regenerate a hero they dislike; a boring one they will simply scroll past.
+
+Before writing the hero prompt, pick **one concrete concept**:
+
+1. Find the post's sharpest idea: the pain, the villain, the payoff, the joke,
+   the metaphor already sitting in the title or intro, or the physical object
+   at the centre of the topic.
+2. Turn it into a **single literal scene** you could describe in one sentence
+   and that a reader would recognise as *this* post. Comedy, exaggeration and
+   visual metaphor are welcome — the site's `toneGuide` sets how far to go.
+3. Write that scene as the prompt: one subject, one idea, no props borrowed
+   from the default scene unless the post is literally about desks or laptops.
+
+The leap from topic to concept:
+
+| topic | boring default | prompt this instead |
+|---|---|---|
+| getting banned from Reddit | person frowning at a laptop | a giant wooden ban hammer frozen mid-swing over a tiny startled cartoon alien; or a lone figure behind jail bars made of upvote arrows |
+| backup strategy | server room | a squirrel burying identical acorns in three separate spots in the snow |
+| email deliverability | inbox on a screen | a paper airplane snagged on the rim of an enormous open trash can |
+| pricing your SaaS | calculator and coffee | a market stall with a single apple on a velvet cushion under a spotlight |
+| founder burnout | tired person at a desk at night | a candle burning at both ends, propped on a tiny desk |
+| Shopify store speed | laptop showing a storefront | a snail wearing a shopping cart as its shell, at the starting line of a racetrack |
+| SEO keyword research | analytics dashboard | a prospector panning a river, one gold nugget glinting among grey pebbles |
+
+Rotate the **medium** per run instead of defaulting to photoreal: editorial
+photo, flat vector illustration, papercraft diorama, clay/3D render, isometric
+scene, risograph poster, ink and watercolor, macro still life, vintage
+advertisement… Pick what suits the concept and the `toneGuide`, then hold it
+as the style anchor for the whole set.
+
+**Six-word test** before spending $0.15: caption the prompt in six words. If
+those six words could caption any of the site's last five heroes (check the
+state file's recent articles), start over with a new concept.
+
+Inline images follow the same rule at lower intensity: illustrate *that*
+section's specific idea with a concrete scene; they may be calmer than the
+hero but must not fall back to the default scene either. The OG image is the
+hero's concept simplified and centred, not a separate generic image.
+
+### Writing the prompt
+
+- Be specific: subject, action, style, composition, lighting, mood — "a
+  squirrel in a snowy garden pressing a third acorn into the ground, two small
+  mounds already behind it, soft overcast light, shallow depth of field" beats
+  "a squirrel with acorns".
+- Derive visuals from the concept, the `<!-- IMAGE: … -->` placeholder text,
+  the keywords and the site's `toneGuide`.
 - Write **one style anchor sentence** per run (palette, medium, lighting,
   level of realism) and reuse it verbatim in every prompt so hero, inline and
   OG images look like a set.
 - **Purpose-specific composition:**
   - hero (16:9): one clear focal point, subject in the central two-thirds
-    (themes crop banner edges), calm enough to sit under a title.
+    (themes crop banner edges). Leave some breathing room around the subject
+    if the theme overlays the title — but never dilute the concept to get
+    "calm"; a bold single subject on a simple background does both.
   - inline (16:9 or 4:3): illustrates *that* section, not the whole article.
   - og (auto-cropped to 1200×630): bold, simple, high contrast, subject dead
     centre — it must read at thumbnail size and survives both our centre crop
@@ -117,12 +169,18 @@ stop    : PASS, or cap reached → choose the best round → cp to <slug>-<purpo
      correct counts of limbs, fingers, objects;
    - no garbled text, logos, watermarks, fake UI;
    - subject and mood match the placeholder and the article;
+   - **not generic**: a hero (or inline) that is a person at a laptop, a tidy
+     desk with coffee, a glowing screen in the dark, hands typing, or any
+     scene that could caption a different post is `DEFECT: generic stock
+     scene — blocking — fix: regen` with a fresh concept from "Hero: concept
+     first". This is not a taste call;
    - composition fits the purpose (hero focal point central; og subject inside
      the centre and legible as a thumbnail; inline supports its section);
    - no obvious artifacts, blur, duplicated/tiled elements, uncanny faces.
    **Bar:** fix only what a reader would notice at display size. Do not spend a
    round on taste ("I'd prefer warmer light") — every edit re-synthesises the
-   frame and can regress something else.
+   frame and can regress something else. A generic desk/laptop scene is not
+   taste: a reader notices it by not noticing the post at all.
 3. **Choose the fix** (only while rounds remain):
    - **Localized defect, rest good → edit.** Precise, minimal instruction that
      names the defect and its location and pins everything else:
@@ -130,8 +188,9 @@ stop    : PASS, or cap reached → choose the best round → cp to <slug>-<purpo
      make it a dark night sky with the desk lamp and monitor as the only light
      sources. Keep the composition, subject, colours and everything else
      identical." --out <slug>-<purpose>.r<N>.jpg --purpose <p>`
-   - **Fundamental defect → regenerate.** Wrong subject/scene/composition, text
-     all over, an og subject that falls outside the crop, or a previous edit
+   - **Fundamental defect → regenerate.** Wrong subject/scene/composition, a
+     generic stock scene (write a new concept, do not edit props into the old
+     frame), text all over, an og subject that falls outside the crop, or a previous edit
      that failed to fix the same defect: re-run *without* `--edit`, with the
      defect written into the prompt as an explicit positive constraint
      (prevention checklist), `--out <slug>-<purpose>.r<N>.jpg`.

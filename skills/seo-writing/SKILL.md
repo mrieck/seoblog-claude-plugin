@@ -58,8 +58,15 @@ description: >-
 
 ## Image placeholders
 
-- Write each `<!-- IMAGE: … -->` as a concrete brief (subject, setting, time of
-  day, mood) — it becomes the seed of the image prompt.
+- Write each `<!-- IMAGE: … -->` as a concrete brief — it becomes the seed of
+  the image prompt.
+- The **hero brief names a concept**: one literal, specific scene drawn from
+  the post's central idea, metaphor, villain or joke (a ban hammer mid-swing
+  for a post about getting banned; a squirrel burying acorns in three spots
+  for a backup post). **Never** a person at a laptop, a tidy desk with coffee,
+  or a glowing screen in a dark room — see blog-images → "Hero: concept
+  first". Inline briefs: the concrete idea of *that* section, plus setting and
+  mood.
 - Prompt craft, the defect-prevention checklist, and the vision review/fix
   loop live in the **blog-images** skill. Every image needs descriptive
   **alt text** (SEO + accessibility), written from what the final image shows.

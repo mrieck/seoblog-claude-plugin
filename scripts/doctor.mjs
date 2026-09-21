@@ -1,7 +1,7 @@
 /**
  * Environment preflight. Run before any writing session:
  *
- *   node scripts/doctor.mjs [--site <id>]
+ *   node scripts/doctor.mjs [--site <id>] [--workflow all|blog|socialcue] [--text-only]
  *
  * stdout: one JSON line {ok, checks: [{name, ok, required, detail, fix}]}
  * stderr: human-readable table with remediation hints.
@@ -13,8 +13,8 @@
 import { existsSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { parseArgs } from "./lib/args.mjs";
-import { loadSecrets, secretSource, siteApiKey, configPath } from "./lib/env.mjs";
+import { parseArgs, boolArg } from "./lib/args.mjs";
+import { loadSecrets, secretSource, siteApiKey, siteKeyEnvName, configPath } from "./lib/env.mjs";
 import { readConfig } from "./lib/config.mjs";
 import { MAX_REVIEW_ROUNDS } from "./lib/models.mjs";
 import { findSocialCueCli, findSocialCueStore, readSocialCueBrands } from "./lib/socialcue-locate.mjs";
@@ -28,6 +28,14 @@ function check(name, ok, { required = true, detail = "", fix = "" } = {}) {
 }
 
 const args = parseArgs(process.argv.slice(2));
+const workflow = args.workflow ?? "all";
+const textOnly = boolArg(args["text-only"]);
+if (!["all", "blog", "socialcue"].includes(workflow)) {
+  check("workflow", false, { detail: "Expected --workflow blog|socialcue|all" });
+}
+loadSecrets();
+const imagesEnabled = !textOnly && !!process.env.FAL_API_KEY;
+const setupFix = "Use the seoblog-setup skill (Claude: /seoblog:setup)";
 
 // -- runtime --
 const [major] = process.versions.node.split(".").map(Number);
@@ -41,17 +49,17 @@ for (const dep of ["@fal-ai/client", "sharp"]) {
   if (!existsSync(path.join(PLUGIN_ROOT, "node_modules", dep))) depsOk = false;
 }
 check("npm dependencies installed", depsOk, {
+  required: imagesEnabled,
   detail: depsOk ? "" : "node_modules missing @fal-ai/client and/or sharp",
-  fix: `cd "${PLUGIN_ROOT}" && npm install`,
+  fix: `npm ci --prefix "${PLUGIN_ROOT}"`,
 });
 
 // -- secrets --
-loadSecrets();
 const falSource = secretSource("FAL_API_KEY");
 check("FAL_API_KEY", !!process.env.FAL_API_KEY, {
   required: false, // articles can ship without images
   detail: falSource ? `from ${falSource}` : "not set — image generation disabled",
-  fix: "security add-generic-password -s seoblog -a FAL_API_KEY -w",
+  fix: process.platform === "darwin" ? "security add-generic-password -s seoblog -a FAL_API_KEY -w" : "Set FAL_API_KEY in the agent process environment",
 });
 if (falSource === "plugin .env") {
   check("FAL_API_KEY storage", false, {
@@ -69,25 +77,31 @@ try {
   check("config file", true, {
     required: false,
     detail: n ? `${n} site(s) at ${configPath()}` : "no sites configured yet",
-    fix: n ? "" : "Run /seoblog:setup",
+    fix: n ? "" : setupFix,
   });
 } catch (e) {
   check("config file", false, { detail: e.message, fix: `Fix or delete ${configPath()}` });
 }
 
-const siteIds = config
-  ? args.site
-    ? [args.site]
-    : Object.keys(config.sites)
-  : [];
+const selectedSite = args.site ?? config?.defaultSite ??
+  (config && Object.keys(config.sites).length === 1 ? Object.keys(config.sites)[0] : null);
+if (workflow === "blog" && config && !selectedSite) {
+  check("selected site", false, { detail: "No default or unambiguous site configured", fix: setupFix });
+}
+let siteIds = [];
+if (config && workflow !== "socialcue") {
+  siteIds = workflow === "blog"
+    ? selectedSite ? [selectedSite] : []
+    : args.site ? [args.site] : Object.keys(config.sites);
+}
 for (const id of siteIds) {
   const site = config.sites[id];
   if (!site) {
-    check(`site ${id}`, false, { detail: "not in config", fix: "Run /seoblog:setup" });
+    check(`site ${id}`, false, { detail: "not in config", fix: setupFix });
     continue;
   }
   if (!site.baseUrl) {
-    check(`site ${id}: baseUrl`, false, { detail: "no baseUrl", fix: "Run /seoblog:setup" });
+    check(`site ${id}: baseUrl`, false, { detail: "no baseUrl", fix: setupFix });
     continue;
   }
   if (site.imageReviewRounds !== undefined) {
@@ -102,7 +116,7 @@ for (const id of siteIds) {
   const { key, source } = siteApiKey(id, site);
   check(`site ${id}: API key`, !!key, {
     detail: key ? `from ${source}` : "not found",
-    fix: `security add-generic-password -s seoblog -a "site:${id}" -w`,
+    fix: process.platform === "darwin" ? `security add-generic-password -s seoblog -a "site:${id}" -w` : `Set ${siteKeyEnvName(id)} in the agent process environment`,
   });
   if (!key) continue;
 
@@ -145,14 +159,14 @@ if (config) {
   const brands = store?.storeDir ? readSocialCueBrands(store.storeDir) : [];
   const ok = !!(cli && !cli.error && store && !store.error);
   check("SocialCue (for /seoblog:socialcue)", ok, {
-    required: false,
+    required: workflow === "socialcue",
     detail: !cli || cli.error
-      ? "plugin not found — /seoblog:socialcue unavailable"
+      ? cli?.error ?? "SocialCue not found — library drafts unavailable"
       : !store || store.error
         ? `cli ${cli.version ?? "?"} found; no .socialdiscovery store from this cwd`
         : `cli ${cli.version ?? "?"}, store ${store.storeDir} (${brands.length} brand(s))`,
     fix: !cli || cli.error
-      ? "/plugin install socialcue@productive-mark (or set socialCue.cliPath in config)"
+      ? "Set socialCue.cliPath to an installed SocialCue lib/cli.js (Claude: /plugin install socialcue@productive-mark)"
       : !store || store.error
         ? "Run from your SocialCue project, or set socialCue.dir in ~/.config/seoblog/config.json"
         : "",

@@ -1,0 +1,41 @@
+{
+  "name": "seoblog",
+  "version": "0.3.1",
+  "description": "Research and write SEO articles with reviewed images, CMS drafts, explicit publishing, and SocialCue library drafts in Codex or Claude Code.",
+  "author": {
+    "name": "Mark Rieck"
+  },
+  "homepage": "https://github.com/mrieck/seoblog-claude-plugin",
+  "repository": "https://github.com/mrieck/seoblog-claude-plugin",
+  "license": "MIT",
+  "keywords": [
+    "seo",
+    "blog",
+    "content",
+    "writing",
+    "publishing",
+    "fal",
+    "wordpress",
+    "shopify",
+    "socialcue",
+    "indiehackers",
+    "devto"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "SEO Blog",
+    "shortDescription": "Research, write, and manage blog drafts.",
+    "longDescription": "Research and write SEO articles with reviewed images, CMS drafts, explicit publishing, and SocialCue library drafts in Codex or Claude Code.",
+    "developerName": "Mark Rieck",
+    "category": "Productivity",
+    "capabilities": [
+      "Interactive",
+      "Write"
+    ],
+    "defaultPrompt": [
+      "Set up my blog for SEO Blog.",
+      "Write an SEO article and save it as a draft.",
+      "Write a SocialCue library draft."
+    ]
+  }
+}

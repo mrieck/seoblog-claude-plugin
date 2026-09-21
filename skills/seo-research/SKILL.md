@@ -8,6 +8,8 @@ description: >-
   "research blog topics" for their niche.
 ---
 
+Read [runtime instructions](../../references/runtime.md) before running scripts.
+
 # SEO research
 
 ## Topic selection

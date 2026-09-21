@@ -10,6 +10,8 @@ description: >-
   setup interview for /seoblog:setup and the config/state file schemas.
 ---
 
+Read [runtime instructions](../../references/runtime.md) before running scripts.
+
 # SEO blog writing — the orchestrator
 
 You write exactly **ONE article per invocation**, walking these phases in order:
@@ -18,6 +20,9 @@ You write exactly **ONE article per invocation**, walking these phases in order:
 analyze → select topic → research → outline → write
         → images → publish draft → report
 ```
+
+Run the blog preflight from the runtime instructions before analyzing content.
+Honor "no images" by skipping generation and stripping image placeholders.
 
 This flow is fully autonomous — it runs unattended (e.g. scheduled off-hours),
 so it must complete without ever asking the user anything.
@@ -73,7 +78,7 @@ own terminal (Keychain service `seoblog`). See Setup below.
 
 ## Phase order in detail
 
-1. **ANALYZE** — read the state file, then `node "${CLAUDE_PLUGIN_ROOT}/scripts/cms.mjs" list --site <id> --exclude-assets`
+1. **ANALYZE** — read the state file, then `node "${SEOBLOG_PLUGIN_ROOT}/scripts/cms.mjs" list --site <id> --exclude-assets`
    (the key is sent on GET, so drafts come back too; `--exclude-assets` hides
    the SocialCue image-holder drafts, which are not content). Build a map of covered
    topics, gaps, and topical clusters. **Dedup rule:** if the topic/keyword is in
@@ -160,5 +165,8 @@ security add-generic-password -s seoblog -a FAL_API_KEY -w
 security add-generic-password -s seoblog -a "site:<siteId>" -w
 ```
 
-Finish with `node "${CLAUDE_PLUGIN_ROOT}/scripts/doctor.mjs" --site <id>` and fix
+On non-macOS systems, provide the environment-variable instructions from the
+runtime guide instead of Keychain commands.
+
+Finish with `node "${SEOBLOG_PLUGIN_ROOT}/scripts/doctor.mjs" --site <id>` and fix
 anything red. Doctor's connectivity check is free and proves the key works.

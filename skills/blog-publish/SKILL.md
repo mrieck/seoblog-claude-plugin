@@ -8,12 +8,14 @@ description: >-
   drafts, or when the user runs /seoblog:publish.
 ---
 
+Read [runtime instructions](../../references/runtime.md) before running scripts.
+
 # Blog publishing mechanics
 
 All remote calls go through `cms.mjs` (stdout = one JSON line, stderr = progress):
 
 ```
-node "${CLAUDE_PLUGIN_ROOT}/scripts/cms.mjs" <list|create|update|get|upload-image> --site <id> …
+node "${SEOBLOG_PLUGIN_ROOT}/scripts/cms.mjs" <list|create|update|get|upload-image> --site <id> …
 ```
 
 Write article/patch JSON to a temp file first — body HTML never goes on argv.

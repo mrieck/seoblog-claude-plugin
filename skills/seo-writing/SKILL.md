@@ -7,6 +7,8 @@ description: >-
   blog article content, or fixing SEO issues in an existing draft.
 ---
 
+Read [runtime instructions](../../references/runtime.md) before running scripts.
+
 # SEO writing
 
 ## Outline first

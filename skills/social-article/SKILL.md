@@ -10,6 +10,8 @@ description: >-
   non-duplicated content.
 ---
 
+Read [runtime instructions](../../references/runtime.md) before running scripts.
+
 # Social article — write for SocialCue
 
 You write exactly **ONE post per invocation** and hand it to SocialCue. The
@@ -22,6 +24,12 @@ locate → interpret → dedup + research → write (markdown)
        → images (bucket → generate → review → host) → hand off → record → report
 ```
 
+Run the SocialCue preflight from the runtime instructions first. Honor the
+user's topic, length, platform, and voice samples. A request for a draft only
+in chat stops before the library handoff. Missing CMS configuration does not
+block text-only drafts: skip live-blog dedup if no matching site is usable and
+report that limitation. Never invent first-person experiences.
+
 Craft lives in sibling skills — load them as you reach each phase:
 - **seo-writing** → section "Platform-native markdown" (format + per-platform rules)
 - **seo-research** → light research only (2–3 fetches; credibility, not SERP ranking)
@@ -30,11 +38,11 @@ Craft lives in sibling skills — load them as you reach each phase:
 Scripts (stdout = one JSON line, stderr = progress):
 
 ```
-node "${CLAUDE_PLUGIN_ROOT}/scripts/socialcue.mjs" locate
-node "${CLAUDE_PLUGIN_ROOT}/scripts/socialcue.mjs" host-images --site <id> --title "…" --file <img> [--file …] [--alt "…" …]
-node "${CLAUDE_PLUGIN_ROOT}/scripts/socialcue.mjs" add --file item.json
-node "${CLAUDE_PLUGIN_ROOT}/scripts/cms.mjs" list --site <id> --exclude-assets
-node "${CLAUDE_PLUGIN_ROOT}/scripts/gen-image.mjs" …   (per blog-images)
+node "${SEOBLOG_PLUGIN_ROOT}/scripts/socialcue.mjs" locate
+node "${SEOBLOG_PLUGIN_ROOT}/scripts/socialcue.mjs" host-images --site <id> --title "…" --file <img> [--file …] [--alt "…" …]
+node "${SEOBLOG_PLUGIN_ROOT}/scripts/socialcue.mjs" add --file item.json
+node "${SEOBLOG_PLUGIN_ROOT}/scripts/cms.mjs" list --site <id> --exclude-assets
+node "${SEOBLOG_PLUGIN_ROOT}/scripts/gen-image.mjs" …   (per blog-images)
 ```
 
 ## The two questions you may ask
@@ -74,7 +82,7 @@ Both questions are asked at most once, and only if actually needed.
    matching site's blog (`cms.mjs list --site <id> --exclude-assets`): a live
    article on the same subject means this post must take a **different**
    angle (a maker story, a specific lesson, a number the blog didn't have) —
-   never a rewrite. Then research lightly per seo-research: 2–3 WebSearch /
+   never a rewrite. Skip this CMS lookup if no matching site is usable. Then research lightly per seo-research: 2–3 WebSearch /
    WebFetch calls to get facts right and cite what you claim. Product sites:
    WebFetch the product URL. Never invent metrics — say "I don't have numbers
    for that" in the report rather than making them up.
@@ -83,12 +91,14 @@ Both questions are asked at most once, and only if actually needed.
    the platform's idiom, body with `##`/`###` only, short paragraphs, links
    inline, one product link where it earns its place. Place
    `<!-- IMAGE: concrete brief -->` where images belong: the **hero brief
-   first, before the first paragraph**, and inline briefs after the section
+   first, before the first paragraph**, except dev.to/Hashnode covers stay in
+   media and Reddit has no inline images (seo-writing takes precedence), and inline briefs after the section
    they illustrate. Image count by length: short 1 hero / 0 inline, medium
    1 / 1, long 1 / 2. **No OG image** — platforms don't use it.
 
 5. **IMAGES** (skip entirely when images are off; if `FAL_API_KEY` is unset,
-   skip without asking and warn in the report):
+   skip without asking and warn in the report). If skipping images, strip all
+   image placeholders and use `media: []`:
 
    **Pick the bucket** — the configured site that will host the image files:
    - *fit*: the site's `baseUrl` host equals the brand's `url` host, or
@@ -131,10 +141,12 @@ Both questions are asked at most once, and only if actually needed.
    `media` holds the local files (hero first) so `/socialcue-post` can upload a
    cover image where a form has that slot; the markdown already carries the
    hosted URLs for inline placement. `add` prints `{id}` — the hand-off is done;
-   do not poll or retry.
+   do not retry after success, including if later history recording fails.
+   On an ambiguous failure, inspect the library before attempting another add.
 
 7. **RECORD** — append to `~/.config/seoblog/state/<bucket-or-matching-site>.json`
-   → `socialPosts[]`: `{contentItemId, title, brandName, platform, hostSite,
+   only when a matching or hosting site exists. Otherwise skip state recording.
+   Append to `socialPosts[]`: `{contentItemId, title, brandName, platform, hostSite,
    assetHolderId, createdAt}` (use the brand's matching site when no images
    were hosted; `hostSite`/`assetHolderId` null then). Keep the other keys intact.
 
@@ -143,7 +155,8 @@ Both questions are asked at most once, and only if actually needed.
    and spend vs. worst case; and the next step:
    `/socialcue:socialcue-post "<title>" to <platform>` (review and posting stay
    in SocialCue — seoblog never posts). Mention `/socialcue:load-dashboard` to
-   edit the draft first.
+   edit the draft first. In Codex, direct the user to the SocialCue dashboard;
+   these slash commands are Claude shortcuts, not tools to execute.
 
 ## Rules
 

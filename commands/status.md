@@ -1,18 +1,7 @@
 ---
-description: Show seoblog health, article history, keyword queue and current drafts
+description: Check SEO Blog health, article history, keyword queue, and pending drafts.
 ---
 
-Report the current seoblog status:
+Use the [seoblog-status skill](../skills/seoblog-status/SKILL.md).
 
 $ARGUMENTS
-
-1. Run `node "${CLAUDE_PLUGIN_ROOT}/scripts/doctor.mjs"` and summarize the checks.
-2. Read `~/.config/seoblog/state/<siteId>.json` for each configured site (or the
-   one named in the arguments): article count, keyword queue with statuses,
-   lastRunAt, and `socialPosts` (posts written into SocialCue by
-   /seoblog:socialcue — count + last few titles/platforms).
-3. List current drafts via `node "${CLAUDE_PLUGIN_ROOT}/scripts/cms.mjs" list
-   --site <id> --status draft --exclude-assets`.
-4. Present it compactly; suggest /seoblog:write if the queue has pending
-   keywords, /seoblog:publish if drafts are waiting, and note whether
-   /seoblog:socialcue is available (the doctor's SocialCue row).

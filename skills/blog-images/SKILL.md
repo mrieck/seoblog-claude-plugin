@@ -8,19 +8,21 @@ description: >-
   the user asks to regenerate, fix, or review a blog image.
 ---
 
+Read [runtime instructions](../../references/runtime.md) before running scripts.
+
 # Blog images — generate, look, fix
 
-Every image is **looked at before it ships**. You are the reviewer: the `Read`
-tool renders JPEGs visually, so after each generation you Read the file, judge
+Every image is **looked at before it ships**. Use the host’s visual image viewer
+after each generation to inspect the file, judge
 it against the rubric below, and spend a bounded number of paid fix rounds on
 real defects. The whole loop is autonomous — **never ask the user anything**.
 
 The script (stdout = one JSON line, stderr = progress):
 
 ```
-node "${CLAUDE_PLUGIN_ROOT}/scripts/gen-image.mjs" --prompt "…" --out <file> [--purpose hero|inline|og] [--aspect 16:9|4:3|1:1|3:4|9:16]
-node "${CLAUDE_PLUGIN_ROOT}/scripts/gen-image.mjs" --edit <editSource> --prompt "<edit instruction>" --out <new file> [--purpose …]
-node "${CLAUDE_PLUGIN_ROOT}/scripts/gen-image.mjs" [--edit <editSource>] --ref <logo.svg|png> [--ref …] --prompt "…" --out <file>
+node "${SEOBLOG_PLUGIN_ROOT}/scripts/gen-image.mjs" --prompt "…" --out <file> [--purpose hero|inline|og] [--aspect 16:9|4:3|1:1|3:4|9:16]
+node "${SEOBLOG_PLUGIN_ROOT}/scripts/gen-image.mjs" --edit <editSource> --prompt "<edit instruction>" --out <new file> [--purpose …]
+node "${SEOBLOG_PLUGIN_ROOT}/scripts/gen-image.mjs" [--edit <editSource>] --ref <logo.svg|png> [--ref …] --prompt "…" --out <file>
 ```
 
 `--ref` (repeatable) attaches reference images — the site's real logo/app icon,

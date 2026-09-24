@@ -21,7 +21,9 @@ Read [runtime instructions](../../references/runtime.md) before running scripts.
 - Research all of them together to find a cohesive angle.
 
 **Auto-discover mode** — no keywords given:
-1. Review existing content (state history + live article list) for coverage and gaps.
+1. Review existing content (state history + live article list, all statuses) for
+   coverage and gaps. Archived articles are drafts the site owner rejected: treat
+   the topic and close variants of it as covered, not as a gap.
 2. WebSearch for: trending topics in the niche; "People Also Ask" questions;
    competitor content the site hasn't covered; seasonal/timely opportunities.
 3. Select a topic that is NOT already covered, complements existing content

@@ -33,6 +33,11 @@ a product screenshot, a style sample. Refer to them by position in the prompt
 right, referenced ones come out right. SVGs are rasterized automatically.
 Without `--edit`, refs still route through the edit endpoint (same $0.15).
 
+`--model gpt-image-2.5` (edit/ref calls only) swaps nano-banana-pro/edit for
+OpenAI GPT Image 2.5 (~$0.16, token-billed). Use it when the user asks for it, or when
+nano-banana's edit keeps re-drawing the subject while you only wanted the
+background or one region changed.
+
 Output: `{ok, mode: "generate"|"edit", path, editSource, width, height, costUsd, purpose}`.
 `path` is the file that ships (for og: the 1200×630 crop); `editSource` is what
 you pass to the next `--edit` (for og: the uncropped `.src.jpg` master — never

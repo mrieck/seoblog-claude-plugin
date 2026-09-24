@@ -21,6 +21,10 @@
  *        --edit (source is image 1, refs follow) and without it (pure
  *        reference-guided generation, still via the edit endpoint). PNG/JPEG/WebP
  *        as-is; SVG is rasterized to PNG first (fal wants a raster).
+ *   --model gpt-image-2.5  (edit/ref calls only) use OpenAI GPT Image 2.5
+ *        (openai/gpt-image-2.5/sunburst/edit) instead of nano-banana-pro/edit — stronger at
+ *        "swap the background, keep the subject identical" edits. Default:
+ *        nano-banana-pro.
  *
  * --purpose og generates at 16:9 and center-crops to exactly 1200×630 (the
  * social-card ratio; nano-banana-pro has no 1.91:1 aspect option). The uncropped
@@ -37,11 +41,11 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { parseArgs, requireArg } from "./lib/args.mjs";
 import { submitAndWait, extractUrl, download, uploadFile } from "./lib/fal.mjs";
-import { MODELS } from "./lib/models.mjs";
+import { MODELS, EDIT_MODELS } from "./lib/models.mjs";
 import { main, info, report } from "./lib/log.mjs";
 
 const USAGE =
-  'gen-image.mjs --prompt "..." --out <file.jpg> [--aspect 1:1|16:9|9:16|4:3|3:4] [--purpose hero|inline|og] [--edit <source.jpg>] [--ref <image> …]';
+  'gen-image.mjs --prompt "..." --out <file.jpg> [--aspect 1:1|16:9|9:16|4:3|3:4] [--purpose hero|inline|og] [--edit <source.jpg>] [--ref <image> …] [--model nano-banana-pro|gpt-image-2.5]';
 
 const RASTER_TYPES = { ".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".webp": "image/webp" };
 
@@ -99,7 +103,14 @@ await main(async () => {
     throw new Error("--out would overwrite the --edit source round; write each round to a new file");
   }
 
-  const model = mode === "edit" ? MODELS.imageEdit : MODELS.image;
+  const modelName = args.model && args.model !== true ? String(args.model) : "nano-banana-pro";
+  if (!EDIT_MODELS[modelName]) {
+    throw new Error(`--model must be one of ${Object.keys(EDIT_MODELS).join(", ")}`);
+  }
+  if (modelName !== "nano-banana-pro" && mode !== "edit") {
+    throw new Error(`--model ${modelName} is edit-only; pass --edit and/or --ref`);
+  }
+  const model = mode === "edit" ? MODELS[EDIT_MODELS[modelName]] : MODELS.image;
   const ratios = MODELS.image.aspectRatios;
 
   let aspect = args.aspect ?? null;
@@ -115,7 +126,9 @@ await main(async () => {
     throw new Error(`--aspect must be one of ${ratios.join(", ")}`);
   }
 
-  const input = { ...model.input, prompt, aspect_ratio: aspect };
+  const input = model.imageSizes
+    ? { ...model.input, prompt, image_size: model.imageSizes[aspect] }
+    : { ...model.input, prompt, aspect_ratio: aspect };
   if (mode === "edit") {
     const from = editSrc ? `from ${path.basename(editSrc)}` : "from references";
     const withRefs = refs.length ? ` + ${refs.length} ref${refs.length > 1 ? "s" : ""}` : "";

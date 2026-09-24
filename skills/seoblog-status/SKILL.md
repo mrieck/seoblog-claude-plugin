@@ -17,7 +17,8 @@ Use the user’s request as the arguments.
    lastRunAt, and `socialPosts` (posts written into SocialCue by
    /seoblog:socialcue — count + last few titles/platforms).
 3. List current drafts via `node "${SEOBLOG_PLUGIN_ROOT}/scripts/cms.mjs" list
-   --site <id> --status draft --exclude-assets`.
+   --site <id> --status draft --exclude-assets`. Mention the count of
+   `--status archived` articles (rejected drafts the writer must not redo).
 4. Present it compactly; suggest /seoblog:write if the queue has pending
    keywords, /seoblog:publish if drafts are waiting, and note whether
    /seoblog:socialcue is available (the doctor's SocialCue row).

@@ -82,7 +82,9 @@ own terminal (Keychain service `seoblog`). See Setup below.
    (the key is sent on GET, so drafts come back too; `--exclude-assets` hides
    the SocialCue image-holder drafts, which are not content). Build a map of covered
    topics, gaps, and topical clusters. **Dedup rule:** if the topic/keyword is in
-   the article history OR similar content exists live, skip it and pick another.
+   the article history OR similar content exists on the site in ANY status, skip
+   it and pick another. `status: "archived"` means the site owner rejected that
+   draft: the topic AND nearby angles are off the table, never rewrite them.
 2. **SELECT TOPIC** — keyword mode (user gave keywords: first = primary, rest =
    secondary/LSI, ONE article for all of them; mark them in-progress in the
    state file) or auto-discover (no keywords: drain the state keywordQueue first;

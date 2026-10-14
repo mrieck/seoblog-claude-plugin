@@ -1,6 +1,6 @@
 ---
 name: seoblog-setup
-description: Configure or edit an SEO Blog site, voice, CMS connection, and optional images.
+description: Configure or edit an SEO Blog site, voice (tone guide and voice samples), CMS connection, and optional images.
 ---
 
 # Set up SEO Blog
@@ -12,8 +12,9 @@ Use the [seo-blog](../seo-blog/SKILL.md) skill's *Setup interview* section to fu
 Use the user’s request as the arguments.
 
 1. Interview the user (AskUserQuestion) for: site id, baseUrl, cmsType,
-   author, niche, tone, default article length, optional product, optional
-   standing directions.
+   author, niche, tone, optional voice samples (1–3 paragraphs of their own
+   writing, inline or as file paths, saved as `voiceSamples`), default article
+   length, optional product, optional standing directions.
 2. Write the config to `~/.config/seoblog/config.json` (non-secret — never put
    API keys in it). Set defaultSite if it's the first site.
 3. On macOS, print the exact `security add-generic-password` commands for the user to run

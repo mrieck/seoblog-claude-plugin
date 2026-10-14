@@ -17,7 +17,7 @@ Read [runtime instructions](../../references/runtime.md) before running scripts.
 You write exactly **ONE article per invocation**, walking these phases in order:
 
 ```
-analyze → select topic → research → outline → write
+analyze → select topic → research → outline → write → humanize
         → images → publish draft → report
 ```
 
@@ -27,11 +27,12 @@ Honor "no images" by skipping generation and stripping image placeholders.
 This flow is fully autonomous — it runs unattended (e.g. scheduled off-hours),
 so it must complete without ever asking the user anything.
 
-Per-phase craft lives in four sibling skills — load them as you reach each phase:
-- **seo-research** — topic selection, SERP analysis, competitor deep-dives, LSI keywords
-- **seo-writing** — outline + article craft: HTML rules, keyword placement, length targets
-- **blog-images** — image counts/cost, prompt craft, vision review + edit/regenerate fix loop
-- **blog-publish** — script mechanics: create/update/upload via `cms.mjs`, placeholder swap
+Per-phase craft lives in five sibling skills — load them as you reach each phase:
+- [seo-research](../seo-research/SKILL.md) — topic selection, SERP analysis, competitor deep-dives, LSI keywords
+- [seo-writing](../seo-writing/SKILL.md) — outline + article craft: HTML rules, keyword placement, length targets
+- [humanize](../humanize/SKILL.md) — AI-tell review and rewrite of the text before images are briefed
+- [blog-images](../blog-images/SKILL.md) — image counts/cost, prompt craft, vision review + edit/regenerate fix loop
+- [blog-publish](../blog-publish/SKILL.md) — script mechanics: create/update/upload via `cms.mjs`, placeholder swap
 
 ## Files you read and edit directly
 
@@ -47,6 +48,7 @@ There is no state server — you own these files with Read/Edit/Write:
     "author": "Mark Rieck",
     "niche": "Claude Code plugins and AI dev tooling",
     "toneGuide": "Professional and approachable",
+    "voiceSamples": [],                  // optional: 1–3 paragraphs of the author's own writing (inline text or an absolute file path each); the humanize pass matches their rhythm, word choice and dash usage
     "directions": "",                    // standing house rules, appended to every run
     "articleLength": "medium",           // short | medium | long
     "imageReviewRounds": 2,              // 0–3 paid fix rounds per image after vision review (default 2)
@@ -102,6 +104,14 @@ own terminal (Keychain service `seoblog`). See Setup below.
    immediately. Never ask the user to approve it.
 5. **WRITE** — per seo-writing. Full HTML body with `<!-- IMAGE: … -->`
    placeholders (no `<img>` yet), meta description, excerpt, 3–7 tags.
+5b. **HUMANIZE** — per the humanize skill. Run its full process (mark the
+   tells, draft, check, final) on the body, title, meta description and
+   excerpt before any image is briefed, so alt text and image prompts are
+   written from the final text. Voice precedence: the site's `voiceSamples`,
+   then `directions`, then `toneGuide`. Keep every fact, link, keyword
+   placement and `<!-- IMAGE -->` placeholder; never add a detail you do not
+   have (simplify the sentence instead) and never ask. Keep its one report
+   line (`humanize: N tells fixed (strongest: …)`) for phase 8.
 6. **IMAGES** — per blog-images. Compute the image count from its table, note
    the cost ("N images × $0.15 = $X base, up to R fix rounds each → worst case
    $Y via fal.ai") in your progress output for the record, and generate
@@ -116,7 +126,8 @@ own terminal (Keychain service `seoblog`). See Setup below.
    canonical names, swap placeholders, update the state file (record article,
    mark keywords completed, set lastRunAt).
 8. **REPORT.** The article stays a **draft** — that is the terminal state.
-   Report: draft id, slug, live-URL-to-be (`<baseUrl>/blog/<slug>`), per-image
+   Report: draft id, slug, live-URL-to-be (`<baseUrl>/blog/<slug>`), the
+   humanize line from phase 5b, per-image
    review outcome (rounds used, what was fixed), calls made and actual spend vs.
    worst case, any defects left at the cap. Previewing drafts is the site's job — point the
    user at whatever their site provides (e.g. plugmyplugin.com shows drafts at
@@ -148,6 +159,10 @@ it holds no secrets):
    a Custom App token with write_content and optionally shopifyBlogId).
 2. Author name and niche (both required).
 3. Tone guide + default article length (short ~500 / medium ~1200 / long ~2000 words).
+   Also offer voice samples: 1–3 paragraphs of the author's own writing,
+   pasted inline or as an absolute path to a text file, saved as
+   `voiceSamples` (array of strings). The humanize pass matches their rhythm,
+   word choice and punctuation. Skip silently if the user has none.
 4. Optional product for product-led content (productUrl, productName, tagline, shortDesc).
 5. Optional standing directions.
 6. Image review: write `imageReviewRounds: 2` (the default — Claude looks at

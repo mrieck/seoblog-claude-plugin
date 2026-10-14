@@ -8,12 +8,17 @@
  * Config shape:
  *   { "defaultSite": "plugmyplugin",
  *     "sites": { "<id>": { "baseUrl", "cmsType", "author", "niche", "toneGuide",
- *                          "directions", "articleLength", "product", "shopifyBlogId",
- *                          "imageReviewRounds" } } }
+ *                          "voiceSamples", "directions", "articleLength", "product",
+ *                          "shopifyBlogId", "imageReviewRounds" } } }
  *
  *   imageReviewRounds (optional, integer 0–3, default 2): paid fix rounds the
  *   blog-images skill may spend per image after vision review. 0 = review and
  *   report only. Applied by the skill; scripts pass it through untouched.
+ *
+ *   voiceSamples (optional, string[]): 1–3 paragraphs of the author's own
+ *   writing, each either inline text or an absolute path to a text file. The
+ *   humanize skill matches their rhythm, word choice and punctuation (dashes
+ *   included). Applied by the skill; doctor only validates the shape.
  *
  *   Optional top-level "socialCue" (for /seoblog:socialcue — see socialcue.mjs):
  *   { "dir": "/abs/path/.socialdiscovery",   // the SocialCue store to write to

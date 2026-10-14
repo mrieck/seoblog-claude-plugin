@@ -20,20 +20,22 @@ reposted somewhere else. If a similar blog article already exists on the
 user's site, that is a reason to pick a different angle, not to reuse it.
 
 ```
-locate → interpret → dedup + research → write (markdown)
+locate → interpret → dedup + research → write (markdown) → humanize
        → images (bucket → generate → review → host) → hand off → record → report
 ```
 
 Run the SocialCue preflight from the runtime instructions first. Honor the
-user's topic, length, platform, and voice samples. A request for a draft only
+user's topic, length, platform, and voice samples (any pasted in the request,
+plus the matching site's `voiceSamples`). A request for a draft only
 in chat stops before the library handoff. Missing CMS configuration does not
 block text-only drafts: skip live-blog dedup if no matching site is usable and
 report that limitation. Never invent first-person experiences.
 
 Craft lives in sibling skills — load them as you reach each phase:
-- **seo-writing** → section "Platform-native markdown" (format + per-platform rules)
-- **seo-research** → light research only (2–3 fetches; credibility, not SERP ranking)
-- **blog-images** → generate → Read → fix-round loop (used verbatim)
+- [seo-writing](../seo-writing/SKILL.md) → section "Platform-native markdown" (format + per-platform rules)
+- [seo-research](../seo-research/SKILL.md) → light research only (2–3 fetches; credibility, not SERP ranking)
+- [humanize](../humanize/SKILL.md) → AI-tell review and rewrite of the markdown before images
+- [blog-images](../blog-images/SKILL.md) → generate → Read → fix-round loop (used verbatim)
 
 Scripts (stdout = one JSON line, stderr = progress):
 
@@ -96,6 +98,15 @@ Both questions are asked at most once, and only if actually needed.
    they illustrate. Image count by length: short 1 hero / 0 inline, medium
    1 / 1, long 1 / 2. **No OG image** — platforms don't use it.
 
+4b. **HUMANIZE** — per the humanize skill: mark the tells, rewrite, check,
+   final, on the title and markdown body, before any image is briefed. Voice
+   precedence: voice samples from the request, the site's `voiceSamples`, the
+   SocialCue brand voice context and `directions`, then `toneGuide`, then the
+   platform's idiom (Indie Hackers stays first person; Reddit stays
+   conversational). Keep every fact, link, `<!-- IMAGE -->` placeholder and
+   per-platform format rule; never add a detail you do not have, never ask.
+   Keep its one report line for step 8.
+
 5. **IMAGES** (skip entirely when images are off; if `FAL_API_KEY` is unset,
    skip without asking and warn in the report). If skipping images, strip all
    image placeholders and use `media: []`:
@@ -150,7 +161,8 @@ Both questions are asked at most once, and only if actually needed.
    assetHolderId, createdAt}` (use the brand's matching site when no images
    were hosted; `hostSite`/`assetHolderId` null then). Keep the other keys intact.
 
-8. **REPORT** — item id + brand + platform; where the images live (site, holder
+8. **REPORT** — item id + brand + platform; the humanize line from step 4b;
+   where the images live (site, holder
    id/slug) or the no-images warning; the dedup/angle decision; fal calls made
    and spend vs. worst case; and the next step:
    `/socialcue:socialcue-post "<title>" to <platform>` (review and posting stay

@@ -113,6 +113,21 @@ for (const id of siteIds) {
       fix: valid ? "" : `Set "imageReviewRounds" to an integer 0–${MAX_REVIEW_ROUNDS} in ${configPath()}`,
     });
   }
+  if (site.voiceSamples !== undefined) {
+    const v = site.voiceSamples;
+    const isList = Array.isArray(v) && v.every((s) => typeof s === "string" && s.trim());
+    const missing = isList ? v.filter((s) => path.isAbsolute(s) && !s.includes("\n") && !existsSync(s)) : [];
+    const valid = isList && missing.length === 0;
+    check(`site ${id}: voiceSamples`, valid, {
+      required: false,
+      detail: !isList
+        ? `invalid value (want an array of non-empty strings: inline text or absolute file paths); skill will ignore it`
+        : missing.length
+          ? `file(s) not found: ${missing.join(", ")}`
+          : `${v.length} sample(s)`,
+      fix: valid ? "" : `Fix "voiceSamples" for site ${id} in ${configPath()}`,
+    });
+  }
   const { key, source } = siteApiKey(id, site);
   check(`site ${id}: API key`, !!key, {
     detail: key ? `from ${source}` : "not found",

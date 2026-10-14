@@ -20,10 +20,11 @@ MCP server exposing CMS/image tools. In plugin form all of that disappears:
   progress. That's what makes them composable from a skill.
 
 ```
-commands/  write | setup | publish | status | socialcue   thin entrypoints
+commands/  write | setup | publish | humanize | status | socialcue   thin entrypoints
 skills/    seo-blog (orchestrator, autonomous)   what Claude reads
-           seo-research | seo-writing | blog-images | blog-publish
+           seo-research | seo-writing | humanize | blog-images | blog-publish
            social-article (orchestrator for /seoblog:socialcue, two questions max)
+           seoblog-humanize (rewrite an existing draft; Codex entry point)
 scripts/   doctor.mjs    preflight, free connectivity check (+ SocialCue row)
            gen-image.mjs fal.ai image gen + edit rounds (+OG crop/master)
            cms.mjs       list/create/update/get/upload-image
@@ -52,7 +53,15 @@ became self-enforced invariants:
    image (default 2, clamp 3), so worst-case spend is `images × (1 + rounds) ×
    $0.15` and is reported against actual. Rounds are kept as `.rN.jpg` files
    and the winner is copied to a canonical name before upload.
-3. **Draft-always** — every run ends as a draft; `cms.mjs create` hardcodes
+3. **Humanize** — between write and images, Claude runs the humanize skill
+   (25 numbered AI-writing tells adapted from blader/humanizer and
+   Wikipedia's "Signs of AI writing") over the body, title, meta and
+   excerpt: mark the tells, rewrite, check that no fact, link, keyword or
+   image placeholder moved, final. Voice comes from the site's `voiceSamples`,
+   then `directions`, then `toneGuide`. Where humanizer would ask for a
+   missing detail, this pass simplifies the sentence instead, so the run
+   still asks nothing. The count of tells fixed lands in the run report.
+4. **Draft-always** — every run ends as a draft; `cms.mjs create` hardcodes
    `status: "draft"` regardless of input. Publishing is exclusively the
    separate PATCH flip via `/seoblog:publish` (or a prompt that explicitly
    says to publish).
@@ -151,7 +160,7 @@ transcript.
 ## Config and state
 
 `~/.config/seoblog/config.json` — sites (baseUrl, cmsType, author, niche, tone,
-directions, articleLength, imageReviewRounds, product, shopifyBlogId) +
+voiceSamples, directions, articleLength, imageReviewRounds, product, shopifyBlogId) +
 defaultSite + optional `socialCue` (dir, cliPath, brandBySite). Non-secret,
 written by setup.
 

@@ -43,14 +43,43 @@ Read [runtime instructions](../../references/runtime.md) before running scripts.
 
 - Primary keyword naturally in the **first paragraph** and **at least one H2**.
 - Related/LSI keywords throughout — naturally, never stuffed.
-- Compelling hook intro that previews the content.
+- Open with the reader's problem or the post's specific claim, keyword
+  included. No run-up ("Let's dive in"), no rhetorical question, no "In this
+  guide we'll cover".
 - Short paragraphs (2–4 sentences); 8th-grade reading level.
 - Actionable insights and specific examples, not abstract filler.
-- Conclusion with key takeaways or a call to action.
+- Close only if the closing adds something: a next step, a decision rule, or a
+  real call to action on a product site. Otherwise end on the last concrete
+  fact. Never "In conclusion", never a one-line send-off.
 - **Meta description**: 150–160 characters, includes the primary keyword.
 - **Excerpt**: 1–2 sentence summary for listing cards.
 - **Tags**: 3–7 relevant topic tags.
 - Answer the searcher's intent directly; back claims with cited sources.
+
+## Write like a person
+
+The draft gets a full review in the [humanize](../humanize/SKILL.md) skill
+after WRITE, but write it clean the first time. These apply to HTML articles
+and platform markdown alike. Match the site's `voiceSamples` when it has them.
+
+- **Say the thing.** No "it's not X, it's Y" contrasts. The negative half
+  names something nobody claimed.
+- **No one-line closers.** No "That's the real win." or "Let that sink in."
+  after a paragraph, and no row of fragments ("No setup. No config.").
+- **No run-up.** No "Let's dive in", "Here's the thing", "Honestly?".
+- **No arguing with no one.** No "I'm not saying…", "To be clear…",
+  "Some might say… but".
+- **No forced triads.** Use the number of items the meaning has.
+- **No dashes.** No em or en dashes in the output unless a voice sample uses
+  them. Commas, periods, colons and parentheses do the job.
+- **Plain words.** No delve, leverage, seamless, robust, game-changer,
+  unlock, elevate, crucial, landscape, in today's fast-paced world, or the
+  rest of the humanize §12 and §16 lists.
+- **Sentence-case headings**, no emojis, and the first sentence under a
+  heading must not repeat the heading.
+- **Bold only on terms the reader will scan for.** Never bold list labels;
+  each `<li>` is a sentence.
+- **Use is, are and has** instead of "serves as", "boasts", "features", "offers".
 
 ## Product-led content (only when the site has a product)
 

@@ -31,6 +31,24 @@ No hosted runtime, no per-run fee — just your Claude subscription and
 - ✍️ **SEO craft baked in** — title under 60 chars, meta description 150–160,
   keyword placement rules, LSI weaving, 8th-grade readability, tags, excerpt.
   The checklist your freelancer skims is the spec Claude actually follows.
+- ✍️ **Reads like you wrote it** — every draft goes through a humanize pass
+  that strips the AI tells ("it's not just X, it's Y", "Let's dive in", "Let
+  that sink in", forced triads, dashes everywhere, "delve", "seamless", bold
+  list labels) without touching a fact, link or keyword. Paste a few
+  paragraphs of your own writing into `voiceSamples` and it matches your
+  rhythm. `/seoblog:humanize <slug>` runs it on older drafts.
+
+  Before: *"In today's fast-paced content landscape, consistency is key. But
+  let's be honest — most of us don't have time to brainstorm topics every
+  week. That's where a keyword queue comes in. It's not just a list; it's a
+  game-changer."*
+
+  After: *"A keyword queue is a list of searches you have decided to write
+  for, in order. You fill it once a month from your search console and the
+  plugin takes the next one each run."*
+
+  The pattern list is adapted from [Humanizer](https://github.com/blader/humanizer)
+  (MIT) and Wikipedia's "Signs of AI writing".
 - 🖼️ **AI images with alt text** — hero, inline, and a 1200×630 OG social
   image via fal.ai; image count scales with your configured article length,
   and the cost lands in the run report.
@@ -109,6 +127,7 @@ check that proves connectivity before you ever burn a run.
 |---|---|
 | `/seoblog:write [keywords or directions]` | Research → outline → write → images → draft + run report, fully autonomous |
 | `/seoblog:publish [slug]` | Flip a draft to published (no slug: lists your drafts) |
+| `/seoblog:humanize [slug]` | Rewrite an existing draft to remove AI writing tells; facts, links and images untouched (no slug: lists your drafts) |
 | `/seoblog:status` | Health check + article history + keyword queue + pending drafts |
 | `/seoblog:setup` | Add or edit a site configuration |
 | `/seoblog:socialcue <describe the post>` | Write an original Indie Hackers / dev.to / Reddit post in markdown, host its images on your blog, and drop it into SocialCue's Content Library as a draft (needs the Social Cue plugin) |
@@ -179,6 +198,10 @@ SEO Blog Claude Plugin is [MIT licensed](LICENSE).
 Ported from the Cue Up SEO Blog Writer Apify actor — Claude Code itself is
 the agent now, so the hosted runtime (and its per-run fee) is gone.
 
+The humanize skill's pattern list is adapted from
+[Humanizer](https://github.com/blader/humanizer) by Siqi Chen (MIT); see
+[skills/humanize/NOTICE.md](skills/humanize/NOTICE.md).
+
 ## Codex setup
 
 From a clone, register the **repository root**, not `plugins/seoblog`:
@@ -189,7 +212,8 @@ codex plugin add seoblog@seoblog-local
 ```
 
 Start a new thread and ask “Use seoblog-setup to configure my blog.” The other
-entry points are `seo-blog` (write), `seoblog-status`, `seoblog-publish`, and
+entry points are `seo-blog` (write), `seoblog-status`, `seoblog-publish`,
+`seoblog-humanize` (rewrite an existing draft without AI tells), and
 `social-article` (SocialCue library draft). Select the installed skill in Codex
 or name it in your request. No separate model API key or MCP server is needed;
 Codex writes the article and the bundled Node scripts handle integrations.

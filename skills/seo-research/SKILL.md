@@ -12,6 +12,11 @@ Read [runtime instructions](../../references/runtime.md) before running scripts.
 
 # SEO research
 
+Research with WebSearch and WebFetch only. Never use a logged-in browser (the
+Social Cue browser tools) for research: no reddit `.json` or other API
+endpoints, no scripted fetch loops. That traffic carries the user's session,
+looks like a bot and gets their accounts banned.
+
 ## Topic selection
 
 **Keyword mode** — the user supplied keywords:

@@ -1,6 +1,6 @@
 {
   "name": "seoblog",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "description": "Research and write SEO articles with reviewed images, CMS drafts, explicit publishing, and SocialCue library drafts in Codex or Claude Code.",
   "author": {
     "name": "Mark Rieck"
